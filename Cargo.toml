@@ -16,11 +16,9 @@ rust-version = "1.93.0"
 [dependencies]
 clap = { version = "4.6.7", features = ["derive"] }
 tokio = { version = "1.53.2", features = ["full"] }
-num_cpus = { version = "1.17.0" }
 
 [target.'cfg(all(not(target_os = "windows"), not(target_os = "android")))'.dependencies]
 jemallocator = "0.5.4"
-
 
 [build-dependencies]
 toml = "1.1.6"                                                      # TOML parsing for build scripts
@@ -31,7 +29,7 @@ codegen-units = 1                                                   # Single uni
 debug = false                                                       # Strip debug symbols for smaller binary
 incremental = false                                                 # Disable incremental compilation for cleaner builds
 lto = true                                                          # Link-time optimization for better performance
-opt-level = "z"                                                     # Maximum optimization for binary size (prioritize size over speed)
+opt-level = 3                                                       # prioritizes speed (loop unrolling, better branch prediction, instruction cache fit) over binary size.
 panic = "abort"                                                     # Replace unwinding with abort (smaller binary, faster panics)
 rpath = false                                                       # Don't embed runtime library search paths
 strip = true                                                        # Strip all symbols from final binary
