@@ -127,14 +127,19 @@ async fn handle_client(
         return Err("SOCKS5 server rejected authentication methods".into());
     }
 
-    let mut connect_req = vec![5, 1, 0, 3];
-    connect_req.push(host.len() as u8);
-    connect_req.extend_from_slice(host.as_bytes());
-    connect_req.push((port >> 8) as u8);
-    connect_req.push((port & 0xff) as u8);
+    let mut connect_req = [0u8; 262]; // 5 + 1 + 1 + 1 + 255 (max hostname) + 2
+    let len = 6 + host.len();
+    connect_req[0] = 5;
+    connect_req[1] = 1;
+    connect_req[2] = 0;
+    connect_req[3] = 3;
+    connect_req[4] = host.len() as u8;
+    connect_req[5..5+host.len()].copy_from_slice(host.as_bytes());
+    connect_req[5+host.len()] = (port >> 8) as u8;
+    connect_req[5+host.len()+1] = (port & 0xff) as u8;
 
     upstream_stream
-        .write_all(&connect_req)
+        .write_all(&connect_req[..len])
         .await
         .map_err(|e| format!("Failed to send SOCKS5 connect request: {}", e))?;
 
@@ -182,29 +187,16 @@ async fn handle_client(
 }
 
 #[inline]
-fn parse_url(url: &str) -> Option<(String, u16)> {
-    let url = if let Some(rest) = url.strip_prefix("http://") {
-        rest
-    } else if let Some(rest) = url.strip_prefix("https://") {
-        rest
-    } else {
-        url
-    };
+fn parse_url(url: &str) -> Option<(&str, u16)> {
+    let url = url
+        .strip_prefix("http://")
+        .or_else(|| url.strip_prefix("https://"))
+        .unwrap_or(url);
 
     let host_port = url.split('/').next()?.trim();
 
-    if host_port.is_empty() {
-        return None;
+    match host_port.split_once(':') {
+        Some((h, p)) => Some((h, p.parse::<u16>().ok()?)),
+        None => Some((host_port, 80)),
     }
-
-    let (host, port) = match host_port.split_once(':') {
-        Some((h, p)) => {
-            let host = h.to_string();
-            let port = p.parse::<u16>().ok()?;
-            (host, port)
-        }
-        None => (host_port.to_string(), 80),
-    };
-
-    Some((host, port))
 }
