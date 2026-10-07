@@ -1,3 +1,7 @@
+#[cfg(all(not(target_os = "windows"), not(target_os = "android")))]
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 use clap::Parser;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
@@ -7,25 +11,42 @@ use tokio::net::{TcpListener, TcpStream};
 struct Args {
     #[arg(short = 'p', long, default_value = "8765")]
     http_port: u16,
-
     #[arg(short = 'u', long, default_value = "5678")]
     upstream_port: u16,
 }
 
+const SOCKS5_GREETING: &[u8] = &[5, 1, 0];
+const SOCKS5_ERRORS: &[&str] = &[
+    "",
+    "General SOCKS server failure",
+    "Connection not allowed by ruleset",
+    "Network unreachable",
+    "Host unreachable",
+    "Connection refused",
+    "TTL expired",
+    "Command not supported",
+    "Address type not supported",
+];
+const BUFFER_SIZE: usize = 8192;
+
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-
     let listener = match TcpListener::bind(format!("127.0.0.1:{}", args.http_port)).await {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("Failed to bind HTTP listener on 127.0.0.1:{}: {}", args.http_port, e);
+            eprintln!(
+                "Failed to bind HTTP listener on 127.0.0.1:{}: {}",
+                args.http_port, e
+            );
             std::process::exit(1);
         }
     };
-
     eprintln!("HTTP proxy listening on 127.0.0.1:{}", args.http_port);
-    eprintln!("Forwarding to upstream SOCKS5h on 127.0.0.1:{}", args.upstream_port);
+    eprintln!(
+        "Forwarding to upstream SOCKS5h on 127.0.0.1:{}",
+        args.upstream_port
+    );
 
     loop {
         match listener.accept().await {
@@ -44,15 +65,17 @@ async fn main() {
     }
 }
 
-async fn handle_client(mut client: TcpStream, upstream_port: u16) -> Result<(), Box<dyn std::error::Error>> {
-    let mut buf = [0u8; 4096];
+async fn handle_client(
+    mut client: TcpStream,
+    upstream_port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut buf = [0u8; BUFFER_SIZE];
     let n = client.read(&mut buf).await?;
 
     if n == 0 {
         return Err("Client closed connection".into());
     }
 
-    // Parse HTTP request
     let request = std::str::from_utf8(&buf[..n]).map_err(|_| "Invalid UTF-8 in request")?;
     let lines: Vec<&str> = request.lines().collect();
 
@@ -76,14 +99,17 @@ async fn handle_client(mut client: TcpStream, upstream_port: u16) -> Result<(), 
         return Err("Hostname too long (max 255 bytes)".into());
     }
 
-    // Connect to upstream SOCKS5
     let mut upstream_stream = TcpStream::connect(format!("127.0.0.1:{}", upstream_port))
         .await
-        .map_err(|e| format!("Failed to connect to upstream on 127.0.0.1:{}: {}", upstream_port, e))?;
+        .map_err(|e| {
+            format!(
+                "Failed to connect to upstream on 127.0.0.1:{}: {}",
+                upstream_port, e
+            )
+        })?;
 
-    // SOCKS5 handshake: VER=5, NMETHODS=1, METHOD=0(no auth)
     upstream_stream
-        .write_all(&[5, 1, 0])
+        .write_all(SOCKS5_GREETING)
         .await
         .map_err(|e| format!("Failed to send SOCKS5 greeting: {}", e))?;
 
@@ -101,7 +127,6 @@ async fn handle_client(mut client: TcpStream, upstream_port: u16) -> Result<(), 
         return Err("SOCKS5 server rejected authentication methods".into());
     }
 
-    // SOCKS5 connect: VER=5, CMD=1(CONNECT), RSV=0, ATYP=3(domain)
     let mut connect_req = vec![5, 1, 0, 3];
     connect_req.push(host.len() as u8);
     connect_req.extend_from_slice(host.as_bytes());
@@ -127,94 +152,46 @@ async fn handle_client(mut client: TcpStream, upstream_port: u16) -> Result<(), 
         return Err(format!("Invalid SOCKS5 version in connect response: {}", resp[0]).into());
     }
 
-    match resp[1] {
-        0 => {} // Success
-        1 => return Err("SOCKS5: General SOCKS server failure".into()),
-        2 => return Err("SOCKS5: Connection not allowed by ruleset".into()),
-        3 => return Err("SOCKS5: Network unreachable".into()),
-        4 => return Err("SOCKS5: Host unreachable".into()),
-        5 => return Err("SOCKS5: Connection refused".into()),
-        6 => return Err("SOCKS5: TTL expired".into()),
-        7 => return Err("SOCKS5: Command not supported".into()),
-        8 => return Err("SOCKS5: Address type not supported".into()),
-        code => return Err(format!("SOCKS5: Unknown error code {}", code).into()),
+    if resp[1] != 0 {
+        let error_msg = if (resp[1] as usize) < SOCKS5_ERRORS.len() {
+            SOCKS5_ERRORS[resp[1] as usize]
+        } else {
+            "Unknown error code"
+        };
+        return Err(format!("SOCKS5: {}", error_msg).into());
     }
 
-    // Store the original request before reusing buf
-    let original_request = buf[..n].to_vec();
-
-    // Send HTTP request through tunnel
     upstream_stream
-        .write_all(&original_request)
+        .write_all(&buf[..n])
         .await
         .map_err(|e| format!("Failed to send HTTP request through tunnel: {}", e))?;
 
-    // Bidirectional relay (buf can now be safely reused)
     let (mut client_read, mut client_write) = client.into_split();
     let (mut upstream_read, mut upstream_write) = upstream_stream.into_split();
 
-    let client_to_upstream = async {
-        let mut buf = [0u8; 8192];
-        loop {
-            match client_read.read(&mut buf).await {
-                Ok(0) => {
-                    let _ = upstream_write.shutdown().await;
-                    break;
-                }
-                Ok(n) => {
-                    if let Err(e) = upstream_write.write_all(&buf[..n]).await {
-                        eprintln!("Error writing to upstream: {}", e);
-                        break;
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error reading from client: {}", e);
-                    break;
-                }
-            }
-        }
-    };
-
-    let upstream_to_client = async {
-        let mut buf = [0u8; 8192];
-        loop {
-            match upstream_read.read(&mut buf).await {
-                Ok(0) => {
-                    let _ = client_write.shutdown().await;
-                    break;
-                }
-                Ok(n) => {
-                    if let Err(e) = client_write.write_all(&buf[..n]).await {
-                        eprintln!("Error writing to client: {}", e);
-                        break;
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error reading from upstream: {}", e);
-                    break;
-                }
-            }
-        }
-    };
+    let client_to_upstream = tokio::io::copy(&mut client_read, &mut upstream_write);
+    let upstream_to_client = tokio::io::copy(&mut upstream_read, &mut client_write);
 
     tokio::select! {
-        _ = client_to_upstream => {},
-        _ = upstream_to_client => {},
-    }
+    _ = client_to_upstream => {},
+    _ = upstream_to_client => {},
+}
+
 
     Ok(())
 }
 
+#[inline]
 fn parse_url(url: &str) -> Option<(String, u16)> {
-    let url = if url.starts_with("http://") {
-        &url[7..]
-    } else if url.starts_with("https://") {
-        &url[8..]
+    let url = if let Some(rest) = url.strip_prefix("http://") {
+        rest
+    } else if let Some(rest) = url.strip_prefix("https://") {
+        rest
     } else {
         url
     };
 
-    let host_port = url.split('/').next()?;
+    let host_port = url.split('/').next()?.trim();
 
     if host_port.is_empty() {
         return None;
