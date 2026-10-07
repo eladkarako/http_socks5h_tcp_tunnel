@@ -3,6 +3,8 @@
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 use clap::Parser;
+use socket2::Socket;
+use std::os::unix::io::FromRawFd;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -28,6 +30,7 @@ const SOCKS5_ERRORS: &[&str] = &[
     "Address type not supported",
 ];
 const BUFFER_SIZE: usize = 8192;
+const SOCKET_BUFFER_SIZE: usize = 2_097_152;
 
 #[tokio::main]
 async fn main() {
@@ -65,10 +68,21 @@ async fn main() {
     }
 }
 
+#[inline]
+fn configure_socket(stream: &TcpStream) -> Result<(), Box<dyn std::error::Error>> {
+    let socket = Socket::new_v4(socket2::Type::STREAM)?;
+    socket.set_nodelay(true)?;
+    socket.set_send_buffer_size(Some(SOCKET_BUFFER_SIZE))?;
+    socket.set_recv_buffer_size(Some(SOCKET_BUFFER_SIZE))?;
+    Ok(())
+}
+
 async fn handle_client(
     mut client: TcpStream,
     upstream_port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    configure_socket(&client)?;
+
     let mut buf = [0u8; BUFFER_SIZE];
     let n = client.read(&mut buf).await?;
 
@@ -107,6 +121,8 @@ async fn handle_client(
                 upstream_port, e
             )
         })?;
+
+    configure_socket(&upstream_stream)?;
 
     upstream_stream
         .write_all(SOCKS5_GREETING)
