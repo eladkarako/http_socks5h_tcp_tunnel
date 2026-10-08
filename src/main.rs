@@ -74,7 +74,7 @@ fn parse_url(url: &str) -> Option<(&str, u16)> {
 async fn read_and_parse_http_request(
     client: &mut TcpStream,
     buf: &mut [u8; BUFFER_SIZE],
-) -> Result<(String, u16), Box<dyn std::error::Error>> {
+) -> Result<(String, u16, usize), Box<dyn std::error::Error>> {
     let n = client.read(buf).await?;
 
     if n == 0 {
@@ -106,7 +106,7 @@ async fn read_and_parse_http_request(
         return Err("Hostname too long (max 255 bytes)".into());
     }
 
-    Ok((host.to_string(), port))
+    Ok((host.to_string(), port, n))
 }
 
 async fn connect_to_socks5(
@@ -238,7 +238,7 @@ async fn handle_client(
     configure_stream(&client)?;
 
     let mut buf = [0u8; BUFFER_SIZE];
-    let (host, port) =
+    let (host, port, n) =
         read_and_parse_http_request(&mut client, &mut buf).await?;
 
     let upstream_stream = connect_to_socks5(upstream_port).await?;
@@ -246,8 +246,7 @@ async fn handle_client(
 
     socks5_handshake(&mut upstream_stream, &host, port).await?;
 
-    relay_traffic(client, upstream_stream, &buf, BUFFER_SIZE)
-        .await?;
+    relay_traffic(client, upstream_stream, &buf, n).await?;
 
     Ok(())
 }
