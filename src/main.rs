@@ -174,14 +174,14 @@ async fn socks5_handshake(
 
     // Read and validate connect response
     let mut resp = [0u8; 10];
-    let n_resp =
-        upstream_stream.read(&mut resp).await.map_err(|e| {
-            format!("Failed to read SOCKS5 connect response: {}", e)
-        })?;
-
-    if n_resp < 2 {
-        return Err("SOCKS5 connect response too short".into());
-    }
+    upstream_stream.read_exact(&mut resp[..4]).await.map_err(
+        |e| {
+            format!(
+                "Failed to read SOCKS5 connect response header: {}",
+                e
+            )
+        },
+    )?;
 
     if resp[0] != 5 {
         return Err(format!(
@@ -198,6 +198,56 @@ async fn socks5_handshake(
             "Unknown error code"
         };
         return Err(format!("SOCKS5: {}", error_msg).into());
+    }
+
+    // Read the remaining address bytes (variable length based on address type)
+    match resp[3] {
+        1 => {
+            // IPv4: 4 bytes
+            upstream_stream
+                .read_exact(&mut resp[4..8])
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to read SOCKS5 IPv4 address: {}",
+                        e
+                    )
+                })?;
+        }
+        3 => {
+            // Domain name: 1 byte length + variable
+            let domain_len = resp[4] as usize;
+            let total_len = 5 + domain_len + 2; // resp[4] + domain + port
+            if total_len > 10 {
+                return Err("SOCKS5 domain name too long".into());
+            }
+            upstream_stream
+                .read_exact(&mut resp[5..total_len])
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to read SOCKS5 domain response: {}",
+                        e
+                    )
+                })?;
+        }
+        4 => {
+            // IPv6: 16 bytes
+            upstream_stream
+                .read_exact(&mut resp[4..10])
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to read SOCKS5 IPv6 address: {}",
+                        e
+                    )
+                })?;
+        }
+        _ => {
+            return Err(
+                "Unsupported address type in SOCKS5 response".into(),
+            );
+        }
     }
 
     Ok(())
