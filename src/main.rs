@@ -252,7 +252,6 @@ async fn socks5_handshake(
 
     Ok(())
 }
-
 async fn relay_traffic(
     client: TcpStream,
     mut upstream_stream: TcpStream,
@@ -268,15 +267,27 @@ async fn relay_traffic(
     let (mut upstream_read, mut upstream_write) =
         upstream_stream.into_split();
 
+    // Set up bidirectional copy futures
     let client_to_upstream =
         tokio::io::copy(&mut client_read, &mut upstream_write);
     let upstream_to_client =
         tokio::io::copy(&mut upstream_read, &mut client_write);
 
-    tokio::select! {
-        _ = client_to_upstream => {},
-        _ = upstream_to_client => {},
-    }
+    // Run both directions in parallel to completion
+    // NOTE: tokio::join! ensures both directions complete before returning.
+    // If one direction encounters an error, we still attempt to report both.
+    let (r1, r2) =
+        tokio::join!(client_to_upstream, upstream_to_client);
+
+    // Handle client→upstream errors
+    r1.map_err(|e| {
+        format!("Client→Upstream relay failed (bytes copied: unknown): {}", e)
+    })?;
+
+    // Handle upstream→client errors
+    r2.map_err(|e| {
+        format!("Upstream→Client relay failed (bytes copied: unknown): {}", e)
+    })?;
 
     Ok(())
 }
