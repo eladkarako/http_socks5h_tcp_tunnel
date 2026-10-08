@@ -98,12 +98,81 @@ async fn main() {
     eprintln!("Stopped accepting connections.");
 }
 
+async fn socks5_handshake(
+    upstream_stream: &mut TcpStream,
+    host: &str,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Send greeting
+    upstream_stream
+        .write_all(SOCKS5_GREETING)
+        .await
+        .map_err(|e| format!("Failed to send SOCKS5 greeting: {}", e))?;
+
+    // Read greeting response
+    let mut resp = [0u8; 2];
+    upstream_stream
+        .read_exact(&mut resp)
+        .await
+        .map_err(|e| format!("Failed to read SOCKS5 greeting response: {}", e))?;
+
+    if resp[0] != 5 {
+        return Err(format!("Invalid SOCKS5 version: {}", resp[0]).into());
+    }
+
+    if resp[1] == 0xff {
+        return Err("SOCKS5 server rejected authentication methods".into());
+    }
+
+    // Build and send connect request
+    let mut connect_req = [0u8; 262];
+    let len = 6 + host.len();
+    connect_req[0] = 5;
+    connect_req[1] = 1;
+    connect_req[2] = 0;
+    connect_req[3] = 3;
+    connect_req[4] = host.len() as u8;
+    connect_req[5..5 + host.len()].copy_from_slice(host.as_bytes());
+    connect_req[5 + host.len()] = (port >> 8) as u8;
+    connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
+
+    upstream_stream
+        .write_all(&connect_req[..len])
+        .await
+        .map_err(|e| format!("Failed to send SOCKS5 connect request: {}", e))?;
+
+    // Read and validate connect response
+    let mut resp = [0u8; 10];
+    let n_resp = upstream_stream
+        .read(&mut resp)
+        .await
+        .map_err(|e| format!("Failed to read SOCKS5 connect response: {}", e))?;
+
+    if n_resp < 2 {
+        return Err("SOCKS5 connect response too short".into());
+    }
+
+    if resp[0] != 5 {
+        return Err(format!("Invalid SOCKS5 version in connect response: {}", resp[0]).into());
+    }
+
+    if resp[1] != 0 {
+        let error_msg = if (resp[1] as usize) < SOCKS5_ERRORS.len() {
+            SOCKS5_ERRORS[resp[1] as usize]
+        } else {
+            "Unknown error code"
+        };
+        return Err(format!("SOCKS5: {}", error_msg).into());
+    }
+
+    Ok(())
+}
+
 #[inline]
 fn configure_stream(stream: &TcpStream) -> std::io::Result<()> {
     stream.set_nodelay(true)?; // Not automatically inherited. Each socket needs it set explicitly.
     Ok(())
 }
-
 async fn handle_client(
     mut client: TcpStream,
     upstream_port: u16,
@@ -151,63 +220,8 @@ async fn handle_client(
 
     configure_stream(&upstream_stream)?;
 
-    upstream_stream
-        .write_all(SOCKS5_GREETING)
-        .await
-        .map_err(|e| format!("Failed to send SOCKS5 greeting: {}", e))?;
-
-    let mut resp = [0u8; 2];
-    upstream_stream
-        .read_exact(&mut resp)
-        .await
-        .map_err(|e| format!("Failed to read SOCKS5 greeting response: {}", e))?;
-
-    if resp[0] != 5 {
-        return Err(format!("Invalid SOCKS5 version: {}", resp[0]).into());
-    }
-
-    if resp[1] == 0xff {
-        return Err("SOCKS5 server rejected authentication methods".into());
-    }
-
-    let mut connect_req = [0u8; 262]; // 5 + 1 + 1 + 1 + 255 (max hostname) + 2
-    let len = 6 + host.len();
-    connect_req[0] = 5;
-    connect_req[1] = 1;
-    connect_req[2] = 0;
-    connect_req[3] = 3;
-    connect_req[4] = host.len() as u8;
-    connect_req[5..5 + host.len()].copy_from_slice(host.as_bytes());
-    connect_req[5 + host.len()] = (port >> 8) as u8;
-    connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
-
-    upstream_stream
-        .write_all(&connect_req[..len])
-        .await
-        .map_err(|e| format!("Failed to send SOCKS5 connect request: {}", e))?;
-
-    let mut resp = [0u8; 10];
-    let n_resp = upstream_stream
-        .read(&mut resp)
-        .await
-        .map_err(|e| format!("Failed to read SOCKS5 connect response: {}", e))?;
-
-    if n_resp < 2 {
-        return Err("SOCKS5 connect response too short".into());
-    }
-
-    if resp[0] != 5 {
-        return Err(format!("Invalid SOCKS5 version in connect response: {}", resp[0]).into());
-    }
-
-    if resp[1] != 0 {
-        let error_msg = if (resp[1] as usize) < SOCKS5_ERRORS.len() {
-            SOCKS5_ERRORS[resp[1] as usize]
-        } else {
-            "Unknown error code"
-        };
-        return Err(format!("SOCKS5: {}", error_msg).into());
-    }
+    // Single async call instead of 3 separate writes/reads
+    socks5_handshake(&mut upstream_stream, host, port).await?;
 
     upstream_stream
         .write_all(&buf[..n])
@@ -227,6 +241,7 @@ async fn handle_client(
 
     Ok(())
 }
+
 
 #[inline]
 fn parse_url(url: &str) -> Option<(&str, u16)> {
