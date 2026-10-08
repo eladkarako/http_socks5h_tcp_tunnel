@@ -34,201 +34,98 @@ rustflags = ['-C', 'link-arg=/OPT:REF',
 [target.aarch64-linux-android]
 linker    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang'
 ar        = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.i686-linux-android]
 linker    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android21-clang'
 ar        = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.x86_64-linux-android]
 linker    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang'
 ar        = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.armv7-linux-androideabi]
 linker    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang'
 ar        = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 #---------------------------------- Linux (gnu)
 [target.aarch64-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/aarch64-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.i686-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/i686-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.powerpc-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/powerpc-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.powerpc64-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/powerpc64-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.powerpc64le-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/powerpc64le-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-objdump'
-rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpcle-unknown-linux-gnu]
-linker    = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/powerpcle-unknown-linux-gnu-clang'
-ar        = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.x86_64-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/x86_64-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.armv7-unknown-linux-gnueabi]
 linker    = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/armv7-unknown-linux-gnueabi-clang'
 ar        = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 [target.armv7-unknown-linux-gnueabihf]
 linker    = '/home/elad/toolchains/armv7-unknown-linux-gnueabihf/bin/armv7-unknown-linux-gnueabihf-clang'
 ar        = '/home/elad/toolchains/armv7-unknown-linux-gnueabihf/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/armv7-unknown-linux-gnueabihf/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/armv7-unknown-linux-gnueabihf/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/armv7-unknown-linux-gnueabihf/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/armv7-unknown-linux-gnueabihf/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
 #---------------------------------- Linux (musl)
 [target.aarch64-unknown-linux-musl]
 linker    = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/aarch64-unknown-linux-musl-clang'
 ar        = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.i686-unknown-linux-musl]
 linker    = '/home/elad/toolchains/i686-unknown-linux-musl/bin/i686-unknown-linux-musl-clang'
 ar        = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-objdump'
-rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpc-unknown-linux-musl]
-linker    = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/powerpc-unknown-linux-musl-clang'
-ar        = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.powerpc64-unknown-linux-musl]
 linker    = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/powerpc64-unknown-linux-musl-clang'
 ar        = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.powerpc64le-unknown-linux-musl]
 linker    = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/powerpc64le-unknown-linux-musl-clang'
 ar        = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-objdump'
-rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpcle-unknown-linux-musl]
-linker    = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/powerpcle-unknown-linux-musl-clang'
-ar        = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.x86_64-unknown-linux-musl]
 linker    = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/x86_64-unknown-linux-musl-clang'
 ar        = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.armv7-unknown-linux-musleabi]
 linker    = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/armv7-unknown-linux-musleabi-clang'
 ar        = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.armv7-unknown-linux-musleabihf]
 linker    = '/home/elad/toolchains/armv7-unknown-linux-musleabihf/bin/armv7-unknown-linux-musleabihf-clang'
 ar        = '/home/elad/toolchains/armv7-unknown-linux-musleabihf/bin/llvm-ar'
-ranlib    = '/home/elad/toolchains/armv7-unknown-linux-musleabihf/bin/llvm-ranlib'
-strip     = '/home/elad/toolchains/armv7-unknown-linux-musleabihf/bin/llvm-strip'
-objcopy   = '/home/elad/toolchains/armv7-unknown-linux-musleabihf/bin/llvm-objcopy'
-objdump   = '/home/elad/toolchains/armv7-unknown-linux-musleabihf/bin/llvm-objdump'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 
@@ -253,8 +150,6 @@ CC_powerpc64_unknown_linux_gnu    = { force = true,  value = '/home/elad/toolcha
 AR_powerpc64_unknown_linux_gnu    = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-ar'                                                     }
 CC_powerpc64le_unknown_linux_gnu  = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/powerpc64le-unknown-linux-gnu-clang'                       }
 AR_powerpc64le_unknown_linux_gnu  = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-ar'                                                   }
-CC_powerpcle_unknown_linux_gnu    = { force = true,  value = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/powerpcle-unknown-linux-gnu-clang'                           }
-AR_powerpcle_unknown_linux_gnu    = { force = true,  value = '/home/elad/toolchains/powerpcle-unknown-linux-gnu/bin/llvm-ar'                                                     }
 CC_x86_64_unknown_linux_gnu       = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/x86_64-unknown-linux-gnu-clang'                                 }
 AR_x86_64_unknown_linux_gnu       = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-ar'                                                        }
 CC_armv7_unknown_linux_gnueabi    = { force = true,  value = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/armv7-unknown-linux-gnueabi-clang'                           }
@@ -266,14 +161,9 @@ CC_aarch64_unknown_linux_musl     = { force = true,  value = '/home/elad/toolcha
 AR_aarch64_unknown_linux_musl     = { force = true,  value = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-ar'                                                      }
 CC_i686_unknown_linux_musl        = { force = true,  value = '/home/elad/toolchains/i686-unknown-linux-musl/bin/i686-unknown-linux-musl-clang'                                   }
 AR_i686_unknown_linux_musl        = { force = true,  value = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-ar'                                                         }
-CC_powerpc_unknown_linux_musl     = { force = true,  value = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/powerpc-unknown-linux-musl-clang'                             }
-AR_powerpc_unknown_linux_musl     = { force = true,  value = '/home/elad/toolchains/powerpc-unknown-linux-musl/bin/llvm-ar'                                                      }
-CC_powerpc64_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/powerpc64-unknown-linux-musl-clang'                         }
-AR_powerpc64_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-ar'                                                    }
+CC_powerpc_unknown_linux_musl     = { force = true,  value = AR_powerpc64_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-ar'                                                    }
 CC_powerpc64le_unknown_linux_musl = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/powerpc64le-unknown-linux-musl-clang'                     }
 AR_powerpc64le_unknown_linux_musl = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-ar'                                                  }
-CC_powerpcle_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/powerpcle-unknown-linux-musl-clang'                         }
-AR_powerpcle_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpcle-unknown-linux-musl/bin/llvm-ar'                                                    }
 CC_x86_64_unknown_linux_musl      = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/x86_64-unknown-linux-musl-clang'                               }
 AR_x86_64_unknown_linux_musl      = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-ar'                                                       }
 CC_armv7_unknown_linux_musleabi   = { force = true,  value = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/armv7-unknown-linux-musleabi-clang'                         }
