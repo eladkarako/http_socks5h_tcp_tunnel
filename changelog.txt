@@ -1,2 +1,20 @@
+26.10.8
+* optimizations - (Rust Optimization - Shorthand Version With Examples - https://gist.github.com/eladkarako/f1e51d0bd04c5011148f2126f6a020d8#file-rust-optimization-shorthand-version-with-examples-md )
+* Buffer Sizing & Reuse a single buffer for both initial read and relay loop (`buf ` - `upstream_read`) - this eliminates one stack allocation and keeps hot data in the same memory region.
+* Avoid Cloning the Original Request `let original_request = buf[..n].to_vec(); upstream_stream.write_all(&original_request).await?;` -> `upstream_stream.write_all(&buf[..n]).await?;` - already validated the request; no need to heap-allocate a copy.
+* on linux use jemalloc(jemallocator) - proxy spawns tasks per connection. If you expect high concurrency with many small allocations (5–20% throughput gains for connection-heavy workload) but only works on linux where it uses `sh` during the build phase when cargo compiles `jemalloc`. Once the binary is built, `jemalloc` is just compiled machine code linked into your executable — it doesn't invoke any shell scripts or external processes.
+* Pre-compute SOCKS5 Greeting/move constants to module-level and use `const` slices (`SOCKS5_GREETING`, `SOCKS5_ERRORS`, `BUFFER_SIZE`) - tiny, but avoids array creation at runtime.
+* Optimize URL Parsing with Early Exit - `strip_prefix` is slightly faster than `starts_with` + manual slicing - and `trim()` handles whitespace safely.
+* Error Handling: Reduce String Allocations in Error Paths (`SOCKS5_ERRORS`) - Eliminates repeated string allocations and match arms. Error paths are cold anyway, but this is cleaner.
+* Bidirectional Relay: Using `tokio::io::copy` (replacing manual loop with `read`/`write_all`) -  yields 5–15% gains by using highly optimized internal buffering. but less granular error logging per direction - it silently closes the connection on error—no error messages printed.
+* `#[inline]` for small utility function `parse_url`.
++ ctrl+c handling and graceful shutdown.
+* `.cargo/config.toml` cleanup and adding clang (instead of gcc) for linux targets, adding few more, gnu and musl (https://github.com/cross-tools/clang-cross/). for Windows OS MSVC, explicit path to MSVC tools (not llvm). and adding aarch64 for Windows.
+* bug fix to avoid early stream-copy shutdown.
+* bug fix to wait until handshake bytes were all recived.
+
+26.10.7
+* some optimizations (no release).
+
 26.10.6
 + initial
