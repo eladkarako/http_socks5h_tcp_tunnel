@@ -44,6 +44,27 @@ binaries available to download for multiple OS and CPU architectures.
 
 <hr/>
 
+## running and stopping
+
+just launch the execute and you'll see something like that:
+
+```txt
+HTTP proxy listening on 127.0.0.1:8765
+Forwarding to upstream SOCKS5h on 127.0.0.1:5678
+```
+
+press <kbd>CTRL</kbd>+<kbd>C</kbd> (or <kbd>BREAK</kbd>)  
+and you'll see something like this:  
+
+```txt
+Shutting down gracefully...
+Stopped accepting connections.
+```
+
+this is optional, as you can 100% just kill the execute.  
+
+<hr/>
+
 ## description
 
 - accepts `HTTP CONNECT`.
