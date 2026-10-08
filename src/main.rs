@@ -38,7 +38,10 @@ fn create_listener(port: u16) -> std::io::Result<TcpListener> {
     socket.set_send_buffer_size(SOCKET_BUFFER_SIZE)?;
     socket.set_recv_buffer_size(SOCKET_BUFFER_SIZE)?;
 
-    let addr = std::net::SocketAddrV4::new(std::net::Ipv4Addr::LOCALHOST, port);
+    let addr = std::net::SocketAddrV4::new(
+        std::net::Ipv4Addr::LOCALHOST,
+        port,
+    );
     socket.bind(&std::net::SocketAddr::V4(addr).into())?;
     socket.listen(128)?;
 
@@ -78,14 +81,16 @@ async fn read_and_parse_http_request(
         return Err("Client closed connection".into());
     }
 
-    let request = std::str::from_utf8(&buf[..n]).map_err(|_| "Invalid UTF-8 in request")?;
+    let request = std::str::from_utf8(&buf[..n])
+        .map_err(|_| "Invalid UTF-8 in request")?;
     let lines: Vec<&str> = request.lines().collect();
 
     if lines.is_empty() {
         return Err("Empty request".into());
     }
 
-    let request_line: Vec<&str> = lines[0].split_whitespace().collect();
+    let request_line: Vec<&str> =
+        lines[0].split_whitespace().collect();
     if request_line.len() < 2 {
         return Err("Invalid request line".into());
     }
@@ -105,9 +110,12 @@ async fn read_and_parse_http_request(
 }
 
 async fn connect_to_socks5(
-    upstream_port: u16,
+    upstream_port: u16
 ) -> Result<TcpStream, Box<dyn std::error::Error>> {
-    let upstream_stream = TcpStream::connect(format!("127.0.0.1:{}", upstream_port))
+    let upstream_stream = TcpStream::connect(format!(
+        "127.0.0.1:{}",
+        upstream_port
+    ))
         .await
         .map_err(|e| {
             format!(
@@ -126,24 +134,26 @@ async fn socks5_handshake(
     port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Send greeting
-    upstream_stream
-        .write_all(SOCKS5_GREETING)
-        .await
-        .map_err(|e| format!("Failed to send SOCKS5 greeting: {}", e))?;
+    upstream_stream.write_all(SOCKS5_GREETING).await.map_err(
+        |e| format!("Failed to send SOCKS5 greeting: {}", e),
+    )?;
 
     // Read greeting response
     let mut resp = [0u8; 2];
-    upstream_stream
-        .read_exact(&mut resp)
-        .await
-        .map_err(|e| format!("Failed to read SOCKS5 greeting response: {}", e))?;
+    upstream_stream.read_exact(&mut resp).await.map_err(|e| {
+        format!("Failed to read SOCKS5 greeting response: {}", e)
+    })?;
 
     if resp[0] != 5 {
-        return Err(format!("Invalid SOCKS5 version: {}", resp[0]).into());
+        return Err(
+            format!("Invalid SOCKS5 version: {}", resp[0]).into()
+        );
     }
 
     if resp[1] == 0xff {
-        return Err("SOCKS5 server rejected authentication methods".into());
+        return Err(
+            "SOCKS5 server rejected authentication methods".into()
+        );
     }
 
     // Build and send connect request
@@ -158,24 +168,27 @@ async fn socks5_handshake(
     connect_req[5 + host.len()] = (port >> 8) as u8;
     connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
 
-    upstream_stream
-        .write_all(&connect_req[..len])
-        .await
-        .map_err(|e| format!("Failed to send SOCKS5 connect request: {}", e))?;
+    upstream_stream.write_all(&connect_req[..len]).await.map_err(
+        |e| format!("Failed to send SOCKS5 connect request: {}", e),
+    )?;
 
     // Read and validate connect response
     let mut resp = [0u8; 10];
-    let n_resp = upstream_stream
-        .read(&mut resp)
-        .await
-        .map_err(|e| format!("Failed to read SOCKS5 connect response: {}", e))?;
+    let n_resp =
+        upstream_stream.read(&mut resp).await.map_err(|e| {
+            format!("Failed to read SOCKS5 connect response: {}", e)
+        })?;
 
     if n_resp < 2 {
         return Err("SOCKS5 connect response too short".into());
     }
 
     if resp[0] != 5 {
-        return Err(format!("Invalid SOCKS5 version in connect response: {}", resp[0]).into());
+        return Err(format!(
+            "Invalid SOCKS5 version in connect response: {}",
+            resp[0]
+        )
+            .into());
     }
 
     if resp[1] != 0 {
@@ -197,16 +210,18 @@ async fn relay_traffic(
     n: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Send the HTTP request through the tunnel
-    upstream_stream
-        .write_all(&buf[..n])
-        .await
-        .map_err(|e| format!("Failed to send HTTP request through tunnel: {}", e))?;
+    upstream_stream.write_all(&buf[..n]).await.map_err(|e| {
+        format!("Failed to send HTTP request through tunnel: {}", e)
+    })?;
 
     let (mut client_read, mut client_write) = client.into_split();
-    let (mut upstream_read, mut upstream_write) = upstream_stream.into_split();
+    let (mut upstream_read, mut upstream_write) =
+        upstream_stream.into_split();
 
-    let client_to_upstream = tokio::io::copy(&mut client_read, &mut upstream_write);
-    let upstream_to_client = tokio::io::copy(&mut upstream_read, &mut client_write);
+    let client_to_upstream =
+        tokio::io::copy(&mut client_read, &mut upstream_write);
+    let upstream_to_client =
+        tokio::io::copy(&mut upstream_read, &mut client_write);
 
     tokio::select! {
         _ = client_to_upstream => {},
@@ -223,14 +238,16 @@ async fn handle_client(
     configure_stream(&client)?;
 
     let mut buf = [0u8; BUFFER_SIZE];
-    let (host, port) = read_and_parse_http_request(&mut client, &mut buf).await?;
+    let (host, port) =
+        read_and_parse_http_request(&mut client, &mut buf).await?;
 
     let upstream_stream = connect_to_socks5(upstream_port).await?;
     let mut upstream_stream = upstream_stream;
 
     socks5_handshake(&mut upstream_stream, &host, port).await?;
 
-    relay_traffic(client, upstream_stream, &buf, BUFFER_SIZE).await?;
+    relay_traffic(client, upstream_stream, &buf, BUFFER_SIZE)
+        .await?;
 
     Ok(())
 }
@@ -248,7 +265,10 @@ async fn main() {
             std::process::exit(1);
         }
     };
-    eprintln!("HTTP proxy listening on 127.0.0.1:{}", args.http_port);
+    eprintln!(
+        "HTTP proxy listening on 127.0.0.1:{}",
+        args.http_port
+    );
     eprintln!(
         "Forwarding to upstream SOCKS5h on 127.0.0.1:{}",
         args.upstream_port
