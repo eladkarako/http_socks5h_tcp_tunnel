@@ -65,21 +65,37 @@ async fn main() {
         args.upstream_port
     );
 
+    let shutdown = std::sync::Arc::new(tokio::sync::Notify::new());
+    let shutdown_clone = shutdown.clone();
+
+    tokio::spawn(async move {
+        let _ = tokio::signal::ctrl_c().await;
+        eprintln!("\nShutting down gracefully...");
+        shutdown_clone.notify_waiters();
+    });
+
     loop {
-        match listener.accept().await {
-            Ok((client, _)) => {
-                let upstream_port = args.upstream_port;
-                tokio::spawn(async move {
-                    if let Err(e) = handle_client(client, upstream_port).await {
-                        eprintln!("Client error: {}", e);
+        tokio::select! {
+            _ = shutdown.notified() => break,
+            result = listener.accept() => {
+                match result {
+                    Ok((client, _)) => {
+                        let upstream_port = args.upstream_port;
+                        tokio::spawn(async move {
+                            if let Err(e) = handle_client(client, upstream_port).await {
+                                eprintln!("Client error: {}", e);
+                            }
+                        });
                     }
-                });
-            }
-            Err(e) => {
-                eprintln!("Accept error: {}", e);
+                    Err(e) => {
+                        eprintln!("Accept error: {}", e);
+                    }
+                }
             }
         }
     }
+
+    eprintln!("Stopped accepting connections.");
 }
 
 #[inline]
