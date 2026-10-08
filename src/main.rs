@@ -3,8 +3,7 @@
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 use clap::Parser;
-use socket2::Socket;
-use std::os::unix::io::FromRawFd;
+use socket2::{Domain, Socket, Type};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -30,12 +29,27 @@ const SOCKS5_ERRORS: &[&str] = &[
     "Address type not supported",
 ];
 const BUFFER_SIZE: usize = 8192;
-const SOCKET_BUFFER_SIZE: usize = 2_097_152;
+const SOCKET_BUFFER_SIZE: usize = 2_097_152; // 2 MB
+
+fn create_listener(port: u16) -> std::io::Result<TcpListener> {
+    let socket = Socket::new(Domain::IPV4, Type::STREAM, None)?;
+    socket.set_send_buffer_size(SOCKET_BUFFER_SIZE)?;
+    socket.set_recv_buffer_size(SOCKET_BUFFER_SIZE)?;
+
+    let addr = std::net::SocketAddrV4::new(std::net::Ipv4Addr::LOCALHOST, port);
+    socket.bind(&std::net::SocketAddr::V4(addr).into())?;
+    socket.listen(128)?;
+
+    let std_listener = std::net::TcpListener::from(socket);
+    std_listener.set_nonblocking(true)?;
+    TcpListener::from_std(std_listener)
+}
+
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    let listener = match TcpListener::bind(format!("127.0.0.1:{}", args.http_port)).await {
+    let listener = match create_listener(args.http_port) {
         Ok(l) => l,
         Err(e) => {
             eprintln!(
@@ -69,11 +83,8 @@ async fn main() {
 }
 
 #[inline]
-fn configure_socket(stream: &TcpStream) -> Result<(), Box<dyn std::error::Error>> {
-    let socket = Socket::new_v4(socket2::Type::STREAM)?;
-    socket.set_nodelay(true)?;
-    socket.set_send_buffer_size(Some(SOCKET_BUFFER_SIZE))?;
-    socket.set_recv_buffer_size(Some(SOCKET_BUFFER_SIZE))?;
+fn configure_stream(stream: &TcpStream) -> std::io::Result<()> {
+    stream.set_nodelay(true)?; // Not automatically inherited. Each socket needs it set explicitly.
     Ok(())
 }
 
@@ -81,7 +92,7 @@ async fn handle_client(
     mut client: TcpStream,
     upstream_port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    configure_socket(&client)?;
+    configure_stream(&client)?;
 
     let mut buf = [0u8; BUFFER_SIZE];
     let n = client.read(&mut buf).await?;
@@ -122,7 +133,7 @@ async fn handle_client(
             )
         })?;
 
-    configure_socket(&upstream_stream)?;
+    configure_stream(&upstream_stream)?;
 
     upstream_stream
         .write_all(SOCKS5_GREETING)
@@ -150,9 +161,9 @@ async fn handle_client(
     connect_req[2] = 0;
     connect_req[3] = 3;
     connect_req[4] = host.len() as u8;
-    connect_req[5..5+host.len()].copy_from_slice(host.as_bytes());
-    connect_req[5+host.len()] = (port >> 8) as u8;
-    connect_req[5+host.len()+1] = (port & 0xff) as u8;
+    connect_req[5..5 + host.len()].copy_from_slice(host.as_bytes());
+    connect_req[5 + host.len()] = (port >> 8) as u8;
+    connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
 
     upstream_stream
         .write_all(&connect_req[..len])
@@ -194,10 +205,9 @@ async fn handle_client(
     let upstream_to_client = tokio::io::copy(&mut upstream_read, &mut client_write);
 
     tokio::select! {
-    _ = client_to_upstream => {},
-    _ = upstream_to_client => {},
-}
-
+        _ = client_to_upstream => {},
+        _ = upstream_to_client => {},
+    }
 
     Ok(())
 }
