@@ -149,6 +149,43 @@ Done
 
 <hr/>
 
+### infographics
+
+<details><summary>parts of the source-code, as flow-charts and graphs. like <del>a bosssss!</del> <strong>an adult!</strong></summary>
+
+![Bidirectional TCP relay](resources/logos/infographics_bidirectional_tcp_relay.png)
+![Client-facing failure behavior](resources/logos/infographics_client_facing_failure_behavior.png)
+![Client port configuration](resources/logos/infographics_client_port_configuration.png)
+![Concurrent client limits](resources/logos/infographics_concurrent_client_limits.png)
+![Ctrl+C shutdown](resources/logos/infographics_ctrl_c_shutdown.png)
+![Destination parsing limits](resources/logos/infographics_destination_parsing_limits.png)
+![Error handling & timeout handling](resources/logos/infographics_error_handling_timeout_handling.png)
+![Flow](resources/logos/infographics_flow.png)
+![Hostname encoding](resources/logos/infographics_hostname_encoding.png)
+![HTTP request parsing](resources/logos/infographics_http_request_parsing.png)
+![HTTP request shape](resources/logos/infographics_http_request_shape.png)
+![Local access boundary](resources/logos/infographics_local_access_boundary.png)
+![Local listener](resources/logos/infographics_local_listener.png)
+![Per-client error reporting](resources/logos/infographics_per_client_error_reporting.png)
+![Replay read timeout gap](resources/logos/infographics_replay_read_timeout_gap.png)
+![Rust build and dependencies](resources/logos/infographics_rust_build_and_dependencies.png)
+![SOCKS5 connect error codes](resources/logos/infographics_socks5_connect_error_codes.png)
+![SOCKS5 reply validation](resources/logos/infographics_socks5_reply_validation.png)
+![SOCKS5H handshake](resources/logos/infographics_socks5h_handshake.png)
+![TCP EOF and half-close behavior](resources/logos/infographics_tcp_eof_and_half_close_behavior.png)
+![TCP socket configuration](resources/logos/infographics_tcp_socket_configuration.png)
+
+![Code review: Accept error retry loop](resources/logos/infographics_code_review_accept_error_retry_loop.png)
+![Code review: Connect frame by frame](resources/logos/infographics_code_review_connect_frame_by_frame.png)
+![Code review: Partial request line read](resources/logos/infographics_code_review_partial_requestline_read.png)
+![Code review: Query-only URL target](resources/logos/infographics_code_review_query_only_url_target.png)
+![Code review: Reserved reply byte](resources/logos/infographics_code_review_reserved_reply_byte.png)
+![Code review: SOCKS5 method check](resources/logos/infographics_code_review_socks5_method_check.png)
+
+</details>
+
+<hr/>
+
 ### build
 
 <details><summary>notes</summary>
