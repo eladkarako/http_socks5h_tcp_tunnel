@@ -176,7 +176,7 @@ async fn socks5_handshake(
         SOCKS5_CONNECT_MAX_LEN
     );
     */
-    
+
     connect_req[0] = 5;
     connect_req[1] = 1; // CONNECT
     connect_req[2] = 0; // reserved
@@ -386,13 +386,12 @@ async fn main() -> Result<()> {
     let shutdown = std::sync::Arc::new(tokio::sync::Notify::new());
     let shutdown_clone = shutdown.clone();
 
-    tokio::spawn(async move {
+    // Spawn signal handler WITHOUT awaiting
+    let signal_handle = tokio::spawn(async move {
         let _ = tokio::signal::ctrl_c().await;
         eprintln!("\nShutting down gracefully...");
         shutdown_clone.notify_waiters();
-    })
-        .await
-        .context("Signal handler task failed")?;
+    });
 
     loop {
         tokio::select! {
@@ -415,6 +414,9 @@ async fn main() -> Result<()> {
         }
     }
 
+    // Await signal handler after loop exits
+    let _ = signal_handle.await;
     eprintln!("Stopped accepting connections.");
     Ok(())
 }
+
