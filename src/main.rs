@@ -35,26 +35,36 @@ const SOCKET_BUFFER_SIZE: usize = 2_097_152; // 2 MB
 const MAX_HOSTNAME_LEN: usize = 255;
 const SOCKS5_CONNECT_MAX_LEN: usize = 262;
 
-fn create_listener(port: u16) -> std::io::Result<TcpListener> {
-    let socket = Socket::new(Domain::IPV4, Type::STREAM, None)?;
-    socket.set_send_buffer_size(SOCKET_BUFFER_SIZE)?;
-    socket.set_recv_buffer_size(SOCKET_BUFFER_SIZE)?;
+fn create_listener(port: u16) -> Result<TcpListener> {
+    let socket = Socket::new(Domain::IPV4, Type::STREAM, None)
+        .context("Failed to create socket")?;
+    socket
+        .set_send_buffer_size(SOCKET_BUFFER_SIZE)
+        .context("Failed to set send buffer size")?;
+    socket
+        .set_recv_buffer_size(SOCKET_BUFFER_SIZE)
+        .context("Failed to set recv buffer size")?;
 
     let addr = std::net::SocketAddrV4::new(
         std::net::Ipv4Addr::LOCALHOST,
         port,
     );
-    socket.bind(&std::net::SocketAddr::V4(addr).into())?;
-    socket.listen(128)?;
+    socket
+        .bind(&std::net::SocketAddr::V4(addr).into())
+        .context("Failed to bind socket")?;
+    socket.listen(128).context("Failed to listen on socket")?;
 
     let std_listener = std::net::TcpListener::from(socket);
-    std_listener.set_nonblocking(true)?;
+    std_listener
+        .set_nonblocking(true)
+        .context("Failed to set non-blocking")?;
     TcpListener::from_std(std_listener)
+        .context("Failed to create async listener")
 }
 
 #[inline]
-fn configure_stream(stream: &TcpStream) -> std::io::Result<()> {
-    stream.set_nodelay(true)?;
+fn configure_stream(stream: &TcpStream) -> Result<()> {
+    stream.set_nodelay(true).context("Failed to set TCP_NODELAY")?;
     Ok(())
 }
 
@@ -293,20 +303,15 @@ async fn handle_client(
 
     Ok(())
 }
-
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let args = Args::parse();
-    let listener = match create_listener(args.http_port) {
-        Ok(l) => l,
-        Err(e) => {
-            eprintln!(
-                "Failed to bind HTTP listener on 127.0.0.1:{}: {}",
-                args.http_port, e
-            );
-            std::process::exit(1);
-        }
-    };
+    let listener =
+        create_listener(args.http_port).context(format!(
+            "Failed to bind HTTP listener on 127.0.0.1:{}",
+            args.http_port
+        ))?;
+
     eprintln!(
         "HTTP proxy listening on 127.0.0.1:{}",
         args.http_port
@@ -347,4 +352,5 @@ async fn main() {
     }
 
     eprintln!("Stopped accepting connections.");
+    Ok(())
 }
