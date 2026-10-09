@@ -1,3 +1,10 @@
+26.10.10
+* structure change for build to improve speed on linux. 
+* using Microsoft's mimalloc, instead of jema, also not for Android nor Windows OS. 
++ adding timeouts to various processes.
+* fix -Wno-unused-command-line-argument for clang to avoid `-no-pie` for gcc warnings for 32bit processors are use static base address for the binary.
+* removing some targets I probably won't be useful for now (PowerPC).
+
 26.10.9
 * anyhow migration and improving error messages. 
 + including bytes report for client.
