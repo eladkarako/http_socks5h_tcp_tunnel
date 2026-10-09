@@ -9,7 +9,6 @@ use std::{env, path::PathBuf};
 #[cfg(target_os = "windows")]
 use winres::WindowsResource;
 
-
 /// Loads and parses the Cargo.toml file
 #[cfg(target_os = "windows")]
 fn load_cargo_toml(manifest_dir: &PathBuf) -> toml::Value {
@@ -18,7 +17,6 @@ fn load_cargo_toml(manifest_dir: &PathBuf) -> toml::Value {
         .expect("Failed to read Cargo.toml");
     toml::from_str(&content).expect("Failed to parse Cargo.toml")
 }
-
 
 /// Retrieves a string value from a TOML table with a default fallback
 #[cfg(target_os = "windows")]
@@ -31,7 +29,6 @@ fn get_string<'a>(
     table[key].as_str().unwrap_or(default)
 }
 
-
 /// Extracts the first author from the authors array
 #[cfg(target_os = "windows")]
 fn get_first_author(package: &toml::Value) -> &str {
@@ -41,7 +38,6 @@ fn get_first_author(package: &toml::Value) -> &str {
         .and_then(|v| v.as_str())
         .unwrap_or("Unknown")
 }
-
 
 /// Parses a version string (e.g., "1.2.3.4") into (major, minor, patch, release)
 #[cfg(target_os = "windows")]
@@ -60,7 +56,6 @@ fn parse_version(version: &str) -> (u64, u64, u64, u64) {
     (major, minor, patch, release)
 }
 
-
 /// Packs version numbers into a single u64 (48-bit major, 32-bit minor, 16-bit patch, 16-bit release)
 #[cfg(target_os = "windows")]
 #[inline]
@@ -72,7 +67,6 @@ fn pack_version(
 ) -> u64 {
     (major << 48) | (minor << 32) | (patch << 16) | release
 }
-
 
 /// Configures and compiles Windows resource information
 #[cfg(target_os = "windows")]
@@ -88,8 +82,7 @@ fn set_windows_resources(
     release: u64,
     packed: u64,
 ) {
-    let path_icon =
-        manifest_dir.join("resources").join("app.ico");
+    let path_icon = manifest_dir.join("resources").join("app.ico");
     let path_manifest =
         manifest_dir.join("resources").join("app.manifest");
 
@@ -125,7 +118,6 @@ fn set_windows_resources(
 
     res.compile().expect("Failed to compile Windows resources");
 }
-
 
 #[cfg(target_os = "windows")]
 fn main() {
