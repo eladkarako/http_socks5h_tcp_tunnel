@@ -82,7 +82,8 @@ fn set_windows_resources(
     release: u64,
     packed: u64,
 ) {
-    let path_icon = manifest_dir.join("resources").join("logos").join("app.ico");
+    let path_icon =
+        manifest_dir.join("resources").join("logos").join("app.ico");
     let path_manifest =
         manifest_dir.join("resources").join("app.manifest");
 
