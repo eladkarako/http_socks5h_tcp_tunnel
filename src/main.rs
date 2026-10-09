@@ -2,8 +2,7 @@
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-use anyhow::{anyhow, Context, Result};
-
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use clap::Parser;
 use socket2::{Domain, Socket, Type};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -92,44 +91,35 @@ async fn read_and_parse_http_request(
         .await
         .context("Failed to read HTTP request from client")?;
 
-    if n == 0 {
-        return Err(anyhow!(
-            "Client closed connection without sending data"
-        ));
-    }
+    ensure!(n > 0, "Client closed connection without sending data");
 
     let request = std::str::from_utf8(&buf[..n])
         .context("Invalid UTF-8 in request")?;
     let lines: Vec<&str> = request.lines().collect();
 
-    if lines.is_empty() {
-        return Err(anyhow!("Empty HTTP request"));
-    }
+    ensure!(!lines.is_empty(), "Empty HTTP request");
 
     let request_line: Vec<&str> =
         lines[0].split_whitespace().collect();
-    if request_line.len() < 2 {
-        return Err(anyhow!(
-            "Invalid request line: expected at least 2 tokens, got {}",
-            request_line.len()
-        ));
-    }
+    ensure!(
+        request_line.len() >= 2,
+        "Invalid request line: expected at least 2 tokens, got {}",
+        request_line.len()
+    );
 
     let url = request_line[1];
     let (host, port) = parse_url(url).ok_or_else(|| {
         anyhow!("Invalid URL in request: '{}'", url)
     })?;
 
-    if host.is_empty() {
-        return Err(anyhow!("Empty hostname extracted from URL"));
-    }
+    ensure!(!host.is_empty(), "Empty hostname extracted from URL");
 
-    if host.len() > MAX_HOSTNAME_LEN {
-        return Err(anyhow!(
-            "Hostname too long: {} bytes (max 255)",
-            host.len()
-        ));
-    }
+    ensure!(
+        host.len() <= MAX_HOSTNAME_LEN,
+        "Hostname too long: {} bytes (max {})",
+        host.len(),
+        MAX_HOSTNAME_LEN
+    );
 
     Ok((host.to_string(), port, n))
 }
@@ -163,33 +153,30 @@ async fn socks5_handshake(
         "Failed to read SOCKS5 greeting response from server",
     )?;
 
-    if resp[0] != 5 {
-        return Err(anyhow!(
-            "Invalid SOCKS5 version in greeting response: {} (expected 5)",
-            resp[0]
-        ));
-    }
+    ensure!(
+        resp[0] == 5,
+        "Invalid SOCKS5 version in greeting response: {} (expected 5)",
+        resp[0]
+    );
 
-    if resp[1] == 0xff {
-        return Err(anyhow!(
-            "SOCKS5 server rejected all authentication methods"
-        ));
-    }
+    ensure!(
+        resp[1] != 0xff,
+        "SOCKS5 server rejected all authentication methods"
+    );
 
     // Build and send connect request
     let mut connect_req = [0u8; SOCKS5_CONNECT_MAX_LEN];
     let len = 6 + host.len();
 
     /* //might be added later, currently assume larger request will be trunked. that's fine.
-    if len > SOCKS5_CONNECT_MAX_LEN {
-        return Err(anyhow!(
-            "SOCKS5 connect request too large: {} bytes (max {})",
-            len,
-            SOCKS5_CONNECT_MAX_LEN
-        ));
-    }
+    ensure!(
+        len <= SOCKS5_CONNECT_MAX_LEN,
+        "SOCKS5 connect request too large: {} bytes (max {})",
+        len,
+        SOCKS5_CONNECT_MAX_LEN
+    );
     */
-
+    
     connect_req[0] = 5;
     connect_req[1] = 1; // CONNECT
     connect_req[2] = 0; // reserved
@@ -213,12 +200,11 @@ async fn socks5_handshake(
         .await
         .context("Failed to read SOCKS5 connect response header")?;
 
-    if resp_header[0] != 5 {
-        return Err(anyhow!(
-            "Invalid SOCKS5 version in connect response: {} (expected 5)",
-            resp_header[0]
-        ));
-    }
+    ensure!(
+        resp_header[0] == 5,
+        "Invalid SOCKS5 version in connect response: {} (expected 5)",
+        resp_header[0]
+    );
 
     if resp_header[1] != 0 {
         let error_msg = if (resp_header[1] as usize)
@@ -228,10 +214,7 @@ async fn socks5_handshake(
         } else {
             format!("Unknown SOCKS5 error code {}", resp_header[1])
         };
-        return Err(anyhow!(
-            "SOCKS5 connection failed: {}",
-            error_msg
-        ));
+        bail!("SOCKS5 connection failed: {}", error_msg);
     }
 
     // Read address data based on address type
@@ -255,12 +238,12 @@ async fn socks5_handshake(
                 .context("Failed to read SOCKS5 domain length")?;
             let domain_len = len_byte[0] as usize;
 
-            if domain_len > MAX_HOSTNAME_LEN {
-                return Err(anyhow!(
-                    "SOCKS5 response domain too long: {} bytes",
-                    domain_len
-                ));
-            }
+            ensure!(
+                domain_len <= MAX_HOSTNAME_LEN,
+                "SOCKS5 response domain too long: {} bytes (max {})",
+                domain_len,
+                MAX_HOSTNAME_LEN
+            );
 
             let mut domain_and_port = vec![0u8; domain_len + 2];
             upstream_stream
@@ -278,23 +261,24 @@ async fn socks5_handshake(
                     "Failed to read SOCKS5 IPv6 address response",
                 )?;
         }
-        _ => {
-            return Err(anyhow!(
+        atype => {
+            bail!(
                 "Unsupported address type in SOCKS5 response: {} (expected 1, 3, or 4)",
-                resp_header[3]
-            ));
+                atype
+            );
         }
     }
 
     Ok(())
 }
-
 async fn relay_traffic(
     client: TcpStream,
     mut upstream_stream: TcpStream,
     buf: &[u8],
     n: usize,
 ) -> Result<()> {
+    ensure!(n > 0, "No HTTP request data to relay (n={})", n);
+
     // Send the HTTP request through the tunnel
     upstream_stream.write_all(&buf[..n]).await.context(
         "Failed to send HTTP request through SOCKS5 tunnel",
@@ -314,27 +298,11 @@ async fn relay_traffic(
     let (r1, r2) =
         tokio::join!(client_to_upstream, upstream_to_client);
 
-    // Handle client→upstream errors
-    match r1 {
-        Ok(bytes) => {
-            eprintln!("Client→Upstream: {} bytes relayed", bytes);
-        }
-        Err(e) => {
-            return Err(anyhow!(e))
-                .context("Client→Upstream relay failed");
-        }
-    }
+    let bytes1 = r1.context("Client→Upstream relay failed")?;
+    eprintln!("Client→Upstream: {} bytes relayed", bytes1);
 
-    // Handle upstream→client errors
-    match r2 {
-        Ok(bytes) => {
-            eprintln!("Upstream→Client: {} bytes relayed", bytes);
-        }
-        Err(e) => {
-            return Err(anyhow!(e))
-                .context("Upstream→Client relay failed");
-        }
-    }
+    let bytes2 = r2.context("Upstream→Client relay failed")?;
+    eprintln!("Upstream→Client: {} bytes relayed", bytes2);
 
     Ok(())
 }
@@ -392,6 +360,14 @@ async fn handle_client(
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
+
+    ensure!(
+        args.http_port != args.upstream_port,
+        "HTTP port ({}) cannot be the same as upstream port ({})",
+        args.http_port,
+        args.upstream_port
+    );
+
     let listener =
         create_listener(args.http_port).context(format!(
             "Failed to bind HTTP listener on 127.0.0.1:{}",
