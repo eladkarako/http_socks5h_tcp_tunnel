@@ -126,9 +126,10 @@ async fn read_and_parse_http_request(
 
 async fn connect_to_socks5(upstream_port: u16) -> Result<TcpStream> {
     let addr = format!("127.0.0.1:{}", upstream_port);
-    let upstream_stream = TcpStream::connect(&addr).await.context(
-        format!("Failed to connect to SOCKS5 server at {}", addr),
-    )?;
+    let upstream_stream =
+        TcpStream::connect(&addr).await.with_context(|| {
+            format!("Failed to connect to SOCKS5 server at {}", addr)
+        })?;
 
     configure_stream(&upstream_stream)
         .context("Failed to configure SOCKS5 stream")?;
@@ -186,12 +187,15 @@ async fn socks5_handshake(
     connect_req[5 + host.len()] = (port >> 8) as u8;
     connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
 
-    upstream_stream.write_all(&connect_req[..len]).await.context(
-        format!(
-            "Failed to send SOCKS5 connect request for {}:{}",
-            host, port
-        ),
-    )?;
+    upstream_stream
+        .write_all(&connect_req[..len])
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to send SOCKS5 connect request for {}:{}",
+                host, port
+            )
+        })?;
 
     // Read connect response header (4 bytes fixed)
     let mut resp_header = [0u8; 4];
@@ -315,44 +319,55 @@ async fn handle_client(
         .peer_addr()
         .unwrap_or_else(|_| "unknown".parse().unwrap());
 
-    configure_stream(&client).context(format!(
-        "Failed to configure client stream from {}",
-        peer_addr
-    ))?;
+    configure_stream(&client).with_context(|| {
+        format!(
+            "Failed to configure client stream from {}",
+            peer_addr
+        )
+    })?;
 
     let mut buf = [0u8; BUFFER_SIZE];
     let (host, port, n) =
         read_and_parse_http_request(&mut client, &mut buf)
             .await
-            .context(format!(
-                "Failed to parse HTTP request from {}",
-                peer_addr
-            ))?;
+            .with_context(|| {
+                format!(
+                    "Failed to parse HTTP request from {}",
+                    peer_addr
+                )
+            })?;
 
-    let mut upstream_stream =
-        connect_to_socks5(upstream_port).await.context(format!(
-            "Failed to connect to SOCKS5 for {}:{} (client: {})",
-            host, port, peer_addr
-        ))?;
+    let mut upstream_stream = connect_to_socks5(upstream_port)
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to connect to SOCKS5 for {}:{} (client: {})",
+                host, port, peer_addr
+            )
+        })?;
 
     socks5_handshake(&mut upstream_stream, &host, port)
         .await
-        .context(format!(
-            "SOCKS5 handshake failed for {}:{} (client: {})",
-            host, port, peer_addr
-        ))?;
+        .with_context(|| {
+            format!(
+                "SOCKS5 handshake failed for {}:{} (client: {})",
+                host, port, peer_addr
+            )
+        })?;
 
     eprintln!(
         "Tunneling {}:{} for client {}",
         host, port, peer_addr
     );
 
-    relay_traffic(client, upstream_stream, &buf, n).await.context(
-        format!(
-            "Relay failed for {}:{} (client: {})",
-            host, port, peer_addr
-        ),
-    )?;
+    relay_traffic(client, upstream_stream, &buf, n)
+        .await
+        .with_context(|| {
+            format!(
+                "Relay failed for {}:{} (client: {})",
+                host, port, peer_addr
+            )
+        })?;
 
     Ok(())
 }
@@ -369,10 +384,12 @@ async fn main() -> Result<()> {
     );
 
     let listener =
-        create_listener(args.http_port).context(format!(
-            "Failed to bind HTTP listener on 127.0.0.1:{}",
-            args.http_port
-        ))?;
+        create_listener(args.http_port).with_context(|| {
+            format!(
+                "Failed to bind HTTP listener on 127.0.0.1:{}",
+                args.http_port
+            )
+        })?;
 
     eprintln!(
         "HTTP proxy listening on 127.0.0.1:{}",
@@ -419,4 +436,3 @@ async fn main() -> Result<()> {
     eprintln!("Stopped accepting connections.");
     Ok(())
 }
-
