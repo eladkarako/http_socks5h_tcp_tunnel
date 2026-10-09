@@ -3,7 +3,7 @@ use clap::Parser;
 use socket2::{Domain, Socket, Type};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-
+use tokio::time::{timeout, Duration};
 #[derive(Parser)]
 #[command(author, about, long_about = None)]
 struct Args {
@@ -90,10 +90,12 @@ async fn read_and_parse_http_request(
     client: &mut TcpStream,
     buf: &mut [u8; BUFFER_SIZE],
 ) -> Result<(String, u16, usize)> {
-    let n = client
-        .read(buf)
+    let n = timeout(
+        Duration::from_secs(60),
+        client.read(buf),
+    )
         .await
-        .context("Failed to read HTTP request from client")?;
+        .context("Failed (or 60 seconds timeout) to read HTTP request from client")??;
 
     ensure!(n > 0, "Client closed connection without sending data");
 
@@ -130,10 +132,13 @@ async fn read_and_parse_http_request(
 
 async fn connect_to_socks5(upstream_port: u16) -> Result<TcpStream> {
     let addr = format!("127.0.0.1:{}", upstream_port);
-    let upstream_stream =
-        TcpStream::connect(&addr).await.with_context(|| {
-            format!("Failed to connect to SOCKS5 server at {}", addr)
-        })?;
+    let upstream_stream = timeout(
+        Duration::from_secs(30),
+        TcpStream::connect(&addr),
+    ).await
+        .with_context(|| {
+            format!("Failed (or 30 seconds timeout) to connect to SOCKS5 server at {}", addr)
+        })??;
 
     configure_stream(&upstream_stream)
         .context("Failed to configure SOCKS5 stream")?;
@@ -147,16 +152,21 @@ async fn socks5_handshake(
     port: u16,
 ) -> Result<()> {
     // Send greeting
-    upstream_stream
-        .write_all(SOCKS5_GREETING)
+    timeout(
+        Duration::from_secs(30),
+        upstream_stream.write_all(SOCKS5_GREETING),
+    )
         .await
-        .context("Failed to send SOCKS5 greeting to server")?;
+        .context("Failed (or 30 seconds timeout) to send SOCKS5 greeting to server")??;
 
     // Read greeting response
     let mut resp = [0u8; 2];
-    upstream_stream.read_exact(&mut resp).await.context(
-        "Failed to read SOCKS5 greeting response from server",
-    )?;
+    timeout(
+        Duration::from_secs(30),
+        upstream_stream.read_exact(&mut resp),
+    )
+        .await
+        .context("Failed (or 30 seconds timeout) to read SOCKS5 greeting response from server")??;
 
     ensure!(
         resp[0] == 5,
@@ -191,22 +201,27 @@ async fn socks5_handshake(
     connect_req[5 + host.len()] = (port >> 8) as u8;
     connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
 
-    upstream_stream
-        .write_all(&connect_req[..len])
+    //send connect request
+    timeout(
+        Duration::from_secs(30),
+        upstream_stream.write_all(&connect_req[..len]),
+    )
         .await
         .with_context(|| {
             format!(
-                "Failed to send SOCKS5 connect request for {}:{}",
+                "Failed (or 30 seconds timeout) to send SOCKS5 connect request for {}:{}",
                 host, port
             )
-        })?;
+        })??;
 
     // Read connect response header (4 bytes fixed)
     let mut resp_header = [0u8; 4];
-    upstream_stream
-        .read_exact(&mut resp_header)
+    timeout(
+        Duration::from_secs(30),
+        upstream_stream.read_exact(&mut resp_header),
+    )
         .await
-        .context("Failed to read SOCKS5 connect response header")?;
+        .context("Failed (or 30 seconds timeout) to read SOCKS5 connect response header")??;
 
     ensure!(
         resp_header[0] == 5,
@@ -230,12 +245,13 @@ async fn socks5_handshake(
         1 => {
             // IPv4: 4 bytes address + 2 bytes port
             let mut addr_port = [0u8; 6];
-            upstream_stream
-                .read_exact(&mut addr_port)
-                .await
+            timeout(
+                Duration::from_secs(10),
+                upstream_stream.read_exact(&mut addr_port),
+            ).await
                 .context(
-                    "Failed to read SOCKS5 IPv4 address response",
-                )?;
+                    "Failed (or 30 seconds timeout) to read SOCKS5 IPv4 address response",
+                )??;
         }
         3 => {
             // Domain name: 1 byte length + domain + 2 bytes port
@@ -279,7 +295,22 @@ async fn socks5_handshake(
 
     Ok(())
 }
+
 async fn relay_traffic(
+    client: TcpStream,
+    upstream_stream: TcpStream,
+    buf: &[u8],
+    n: usize,
+) -> Result<()> {
+    timeout(
+        Duration::from_secs(600),
+        relay_traffic_impl(client, upstream_stream, buf, n),
+    )
+        .await
+        .context("Relay timed out (600 seconds - 10 minutes)")?
+}
+
+async fn relay_traffic_impl(
     client: TcpStream,
     mut upstream_stream: TcpStream,
     buf: &[u8],

@@ -107,6 +107,30 @@ run same command with `-x http://127.0.0.1:8888` that's through the HTTP proxy. 
 - limitations - only TCP (no UDP). only IPv4 (no IPv6). no authentication (`SOCKS5 METHOD 0` - no auth). hostname length limited to 255 bytes.
 - limitations - this is a connect-proxy, it won't capture the entire HTTP request body if it exceeds `BUFFER_SIZE` `8192`. will have truncated bodies (current risk).
 
+### timeouts
+
+even-though it is a local proxy. it is a good practice to include some kind of "it is stuck for a long time, so close it already"
+it very permissive though..
+
+- 60s for reading HTTP request from client
+- 30s for connecting to SOCKS5
+- 30s for SOCKS5 handshake operations
+- 600s (10 minutes) for the entire relay -  per connection, not global. The relay_traffic() timeout applies to a single client's connection. Each client that connects gets its own 600-second timeout.
+
+```txt
+Client connects
+    ↓
+60s timeout: read HTTP request
+    ↓
+30s timeout: connect to SOCKS5
+    ↓
+30s timeout: SOCKS5 handshake
+    ↓
+600s timeout: relay traffic
+    ↓
+Done
+```
+
 <hr/>
 
 ### build
