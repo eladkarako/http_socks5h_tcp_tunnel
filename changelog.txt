@@ -1,3 +1,9 @@
+26.10.9
+* anyhow migration and improving error messages. 
++ including bytes report for client.
+* bug fix - reading SOCKS5 response better
+* `.cargo/config.toml` fix.
+
 26.10.8
 * optimizations - (Rust Optimization - Shorthand Version With Examples - https://gist.github.com/eladkarako/f1e51d0bd04c5011148f2126f6a020d8#file-rust-optimization-shorthand-version-with-examples-md )
 * Buffer Sizing & Reuse a single buffer for both initial read and relay loop (`buf ` - `upstream_read`) - this eliminates one stack allocation and keeps hot data in the same memory region.
