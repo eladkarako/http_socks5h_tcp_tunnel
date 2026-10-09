@@ -1,6 +1,6 @@
 ## http_socks5h_tcp_tunnel
 
-![](resources/logos/app.png)
+![](resources/app.png)
 
 a tiny HTTP-SOCKS5h TCP tunnel.  
 
