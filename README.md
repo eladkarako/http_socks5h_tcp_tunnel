@@ -50,7 +50,12 @@ binaries available to download for multiple OS and CPU architectures.
 - you can not change the host. it is by design hard-coded to `127.0.0.1`.
 - you may change the ports. `--upstream_port` (default `8765`) should match the already opened port of an existing, local, SOCKS5h server ("upstream").
 - `--http-port` (default `5678`) can be anything unless it is already used. since you eventually would set it manually for various programs (aria2c, ffmpeg, yt-dlp, python, node,...) choose what you'll like, or just use the default.
-- CTRL+C would stop the program.
+
+
+CTRL+C would stop the program.
+
+![](resources/logos/ctrl_c.png)
+
 
 ```
 # CMD
