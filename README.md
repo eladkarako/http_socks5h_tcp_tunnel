@@ -27,9 +27,6 @@ binaries available to download for multiple OS and CPU architectures.
 - [![](resources/logos/64.png) ![](resources/logos/linux.png) aarch64-unknown-linux-gnu.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/aarch64-unknown-linux-gnu.zip)
 - [![](resources/logos/32.png) ![](resources/logos/linux.png) armv7-unknown-linux-gnueabi.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/armv7-unknown-linux-gnueabi.zip)
 - [![](resources/logos/32.png) ![](resources/logos/linux.png) armv7-unknown-linux-gnueabihf.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/armv7-unknown-linux-gnueabihf.zip)
-- [![](resources/logos/32.png) ![](resources/logos/linux.png) powerpc-unknown-linux-gnu.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/powerpc-unknown-linux-gnu.zip)
-- [![](resources/logos/64.png) ![](resources/logos/linux.png) powerpc64-unknown-linux-gnu.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/powerpc64-unknown-linux-gnu.zip)
-- [![](resources/logos/64.png) ![](resources/logos/linux.png) powerpc64le-unknown-linux-gnu.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/powerpc64le-unknown-linux-gnu.zip)
 
 #### Linux (musl)
 - [![](resources/logos/64.png) ![](resources/logos/linux.png) x86_64-unknown-linux-musl.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/x86_64-unknown-linux-musl.zip)
@@ -37,9 +34,6 @@ binaries available to download for multiple OS and CPU architectures.
 - [![](resources/logos/64.png) ![](resources/logos/linux.png) aarch64-unknown-linux-musl.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/aarch64-unknown-linux-musl.zip)
 - [![](resources/logos/32.png) ![](resources/logos/linux.png) armv7-unknown-linux-musleabi.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/armv7-unknown-linux-musleabi.zip)
 - [![](resources/logos/32.png) ![](resources/logos/linux.png) armv7-unknown-linux-musleabihf.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/armv7-unknown-linux-musleabihf.zip)
-- [![](resources/logos/32.png) ![](resources/logos/linux.png) powerpc-unknown-linux-musl.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/powerpc-unknown-linux-musl.zip)
-- [![](resources/logos/64.png) ![](resources/logos/linux.png) powerpc64-unknown-linux-musl.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/powerpc64-unknown-linux-musl.zip)
-- [![](resources/logos/64.png) ![](resources/logos/linux.png) powerpc64le-unknown-linux-musl.zip](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/powerpc64le-unknown-linux-musl.zip)
 
 ### other
 - [changelog.txt](https://github.com/eladkarako/http_socks5h_tcp_tunnel/releases/latest/download/changelog.txt)
