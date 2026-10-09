@@ -172,9 +172,9 @@ async fn socks5_handshake(
         |e| format!("Failed to send SOCKS5 connect request: {}", e),
     )?;
 
-    // Read and validate connect response
-    let mut resp = [0u8; 10];
-    upstream_stream.read_exact(&mut resp[..4]).await.map_err(
+    // Read connect response header (4 bytes fixed)
+    let mut resp_header = [0u8; 4];
+    upstream_stream.read_exact(&mut resp_header).await.map_err(
         |e| {
             format!(
                 "Failed to read SOCKS5 connect response header: {}",
@@ -183,29 +183,31 @@ async fn socks5_handshake(
         },
     )?;
 
-    if resp[0] != 5 {
+    if resp_header[0] != 5 {
         return Err(format!(
             "Invalid SOCKS5 version in connect response: {}",
-            resp[0]
+            resp_header[0]
         )
             .into());
     }
 
-    if resp[1] != 0 {
-        let error_msg = if (resp[1] as usize) < SOCKS5_ERRORS.len() {
-            SOCKS5_ERRORS[resp[1] as usize]
-        } else {
-            "Unknown error code"
-        };
+    if resp_header[1] != 0 {
+        let error_msg =
+            if (resp_header[1] as usize) < SOCKS5_ERRORS.len() {
+                SOCKS5_ERRORS[resp_header[1] as usize]
+            } else {
+                "Unknown error code"
+            };
         return Err(format!("SOCKS5: {}", error_msg).into());
     }
 
-    // Read the remaining address bytes (variable length based on address type)
-    match resp[3] {
+    // Read address data based on address type
+    match resp_header[3] {
         1 => {
-            // IPv4: 4 bytes
+            // IPv4: 4 bytes address + 2 bytes port
+            let mut addr_port = [0u8; 6];
             upstream_stream
-                .read_exact(&mut resp[4..8])
+                .read_exact(&mut addr_port)
                 .await
                 .map_err(|e| {
                     format!(
@@ -215,14 +217,21 @@ async fn socks5_handshake(
                 })?;
         }
         3 => {
-            // Domain name: 1 byte length + variable
-            let domain_len = resp[4] as usize;
-            let total_len = 5 + domain_len + 2; // resp[4] + domain + port
-            if total_len > 10 {
-                return Err("SOCKS5 domain name too long".into());
-            }
+            // Domain name: 1 byte length + domain + 2 bytes port
+            let mut len_byte = [0u8; 1];
             upstream_stream
-                .read_exact(&mut resp[5..total_len])
+                .read_exact(&mut len_byte)
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to read SOCKS5 domain length: {}",
+                        e
+                    )
+                })?;
+            let domain_len = len_byte[0] as usize;
+            let mut domain_and_port = vec![0u8; domain_len + 2];
+            upstream_stream
+                .read_exact(&mut domain_and_port)
                 .await
                 .map_err(|e| {
                     format!(
@@ -232,9 +241,10 @@ async fn socks5_handshake(
                 })?;
         }
         4 => {
-            // IPv6: 16 bytes
+            // IPv6: 16 bytes address + 2 bytes port
+            let mut addr_port = [0u8; 18];
             upstream_stream
-                .read_exact(&mut resp[4..10])
+                .read_exact(&mut addr_port)
                 .await
                 .map_err(|e| {
                     format!(
@@ -252,6 +262,7 @@ async fn socks5_handshake(
 
     Ok(())
 }
+
 async fn relay_traffic(
     client: TcpStream,
     mut upstream_stream: TcpStream,
