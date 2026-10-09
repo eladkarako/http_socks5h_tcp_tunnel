@@ -1,8 +1,6 @@
 # (yeah, that's a PROXY!)
 
-## http_socks5h_tcp_tunnel
-
-![](resources/logos/app.png)
+<h3><img width="32" src="resources/logos/app.png" /> http_socks5h_tcp_tunnel</h3>
 
 a tiny HTTP-SOCKS5h TCP tunnel.  
 
