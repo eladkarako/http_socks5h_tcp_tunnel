@@ -111,6 +111,7 @@ run same command with `-x http://127.0.0.1:8888` that's through the HTTP proxy. 
 - network sockets optimizations - socket buffer size 2MB, and TCP_NODELAY to disable Nagle's algorithm.
 - minimal error reporting - contextual `stderr` based messages for binding, handshake, and connection failures.
 - limitations - only TCP (no UDP). only IPv4 (no IPv6). no authentication (`SOCKS5 METHOD 0` - no auth). hostname length limited to 255 bytes.
+- limitations - this is a connect-proxy, it won't capture the entire HTTP request body if it exceeds `BUFFER_SIZE` `8192`. will have truncated bodies (current risk).
 
 <hr/>
 
