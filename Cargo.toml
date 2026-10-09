@@ -19,8 +19,8 @@ clap = { version = "4.6.7", features = ["derive"] }
 tokio = { version = "1.53.2", features = ["full"] }
 socket2 = { version = "0.6.5" }
 
-[target.'cfg(all(not(target_os = "windows"), not(target_os = "android"), not(target_arch = "arm")))'.dependencies]
-jemallocator = "0.5.4"
+[target.'cfg(all(target_os = "linux", any(target_arch = "x86_64", target_arch = "i686", target_arch = "aarch64")))'.dependencies]
+mimalloc = "0.1.52"                                                 # memory allocation (improved) for specific targets. not Android, not ARM, not Windows.
 
 [build-dependencies]
 toml = "1.1.6"                                                      # TOML parsing for build scripts
