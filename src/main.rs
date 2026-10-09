@@ -2,6 +2,8 @@
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
+use anyhow::{anyhow, Context, Result};
+
 use clap::Parser;
 use socket2::{Domain, Socket, Type};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -70,40 +72,40 @@ fn parse_url(url: &str) -> Option<(&str, u16)> {
         None => Some((host_port, 80)),
     }
 }
-
 async fn read_and_parse_http_request(
     client: &mut TcpStream,
     buf: &mut [u8; BUFFER_SIZE],
-) -> Result<(String, u16, usize), Box<dyn std::error::Error>> {
+) -> Result<(String, u16, usize)> {
     let n = client.read(buf).await?;
 
     if n == 0 {
-        return Err("Client closed connection".into());
+        return Err(anyhow!("Client closed connection"));
     }
 
     let request = std::str::from_utf8(&buf[..n])
-        .map_err(|_| "Invalid UTF-8 in request")?;
+        .context("Invalid UTF-8 in request")?;
     let lines: Vec<&str> = request.lines().collect();
 
     if lines.is_empty() {
-        return Err("Empty request".into());
+        return Err(anyhow!("Empty request"));
     }
 
     let request_line: Vec<&str> =
         lines[0].split_whitespace().collect();
     if request_line.len() < 2 {
-        return Err("Invalid request line".into());
+        return Err(anyhow!("Invalid request line"));
     }
 
     let url = request_line[1];
-    let (host, port) = parse_url(url).ok_or("Invalid URL")?;
+    let (host, port) =
+        parse_url(url).ok_or_else(|| anyhow!("Invalid URL"))?;
 
     if host.is_empty() {
-        return Err("Empty hostname".into());
+        return Err(anyhow!("Empty hostname"));
     }
 
     if host.len() > MAX_HOSTNAME_LEN {
-        return Err("Hostname too long (max 255 bytes)".into());
+        return Err(anyhow!("Hostname too long (max 255 bytes)"));
     }
 
     Ok((host.to_string(), port, n))
@@ -111,49 +113,45 @@ async fn read_and_parse_http_request(
 
 async fn connect_to_socks5(
     upstream_port: u16
-) -> Result<TcpStream, Box<dyn std::error::Error>> {
-    let upstream_stream = TcpStream::connect(format!(
-        "127.0.0.1:{}",
-        upstream_port
-    ))
-        .await
-        .map_err(|e| {
-            format!(
-                "Failed to connect to upstream on 127.0.0.1:{}: {}",
-                upstream_port, e
-            )
-        })?;
+) -> anyhow::Result<TcpStream> {
+    let upstream_stream =
+        TcpStream::connect(format!("127.0.0.1:{}", upstream_port))
+            .await
+            .context(format!(
+                "Failed to connect to upstream on 127.0.0.1:{}",
+                upstream_port
+            ))?;
 
     configure_stream(&upstream_stream)?;
     Ok(upstream_stream)
 }
-
 async fn socks5_handshake(
     upstream_stream: &mut TcpStream,
     host: &str,
     port: u16,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
+    // Changed this line
     // Send greeting
-    upstream_stream.write_all(SOCKS5_GREETING).await.map_err(
-        |e| format!("Failed to send SOCKS5 greeting: {}", e),
-    )?;
+    upstream_stream
+        .write_all(SOCKS5_GREETING)
+        .await
+        .context("Failed to send SOCKS5 greeting")?;
 
     // Read greeting response
     let mut resp = [0u8; 2];
-    upstream_stream.read_exact(&mut resp).await.map_err(|e| {
-        format!("Failed to read SOCKS5 greeting response: {}", e)
-    })?;
+    upstream_stream
+        .read_exact(&mut resp)
+        .await
+        .context("Failed to read SOCKS5 greeting response")?;
 
     if resp[0] != 5 {
-        return Err(
-            format!("Invalid SOCKS5 version: {}", resp[0]).into()
-        );
+        return Err(anyhow!("Invalid SOCKS5 version: {}", resp[0]));
     }
 
     if resp[1] == 0xff {
-        return Err(
-            "SOCKS5 server rejected authentication methods".into()
-        );
+        return Err(anyhow!(
+            "SOCKS5 server rejected authentication methods"
+        ));
     }
 
     // Build and send connect request
@@ -168,27 +166,23 @@ async fn socks5_handshake(
     connect_req[5 + host.len()] = (port >> 8) as u8;
     connect_req[5 + host.len() + 1] = (port & 0xff) as u8;
 
-    upstream_stream.write_all(&connect_req[..len]).await.map_err(
-        |e| format!("Failed to send SOCKS5 connect request: {}", e),
-    )?;
+    upstream_stream
+        .write_all(&connect_req[..len])
+        .await
+        .context("Failed to send SOCKS5 connect request")?;
 
     // Read connect response header (4 bytes fixed)
     let mut resp_header = [0u8; 4];
-    upstream_stream.read_exact(&mut resp_header).await.map_err(
-        |e| {
-            format!(
-                "Failed to read SOCKS5 connect response header: {}",
-                e
-            )
-        },
-    )?;
+    upstream_stream
+        .read_exact(&mut resp_header)
+        .await
+        .context("Failed to read SOCKS5 connect response header")?;
 
     if resp_header[0] != 5 {
-        return Err(format!(
+        return Err(anyhow!(
             "Invalid SOCKS5 version in connect response: {}",
             resp_header[0]
-        )
-            .into());
+        ));
     }
 
     if resp_header[1] != 0 {
@@ -198,7 +192,7 @@ async fn socks5_handshake(
             } else {
                 "Unknown error code"
             };
-        return Err(format!("SOCKS5: {}", error_msg).into());
+        return Err(anyhow!("SOCKS5: {}", error_msg));
     }
 
     // Read address data based on address type
@@ -209,12 +203,7 @@ async fn socks5_handshake(
             upstream_stream
                 .read_exact(&mut addr_port)
                 .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to read SOCKS5 IPv4 address: {}",
-                        e
-                    )
-                })?;
+                .context("Failed to read SOCKS5 IPv4 address")?;
         }
         3 => {
             // Domain name: 1 byte length + domain + 2 bytes port
@@ -222,23 +211,13 @@ async fn socks5_handshake(
             upstream_stream
                 .read_exact(&mut len_byte)
                 .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to read SOCKS5 domain length: {}",
-                        e
-                    )
-                })?;
+                .context("Failed to read SOCKS5 domain length")?;
             let domain_len = len_byte[0] as usize;
             let mut domain_and_port = vec![0u8; domain_len + 2];
             upstream_stream
                 .read_exact(&mut domain_and_port)
                 .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to read SOCKS5 domain response: {}",
-                        e
-                    )
-                })?;
+                .context("Failed to read SOCKS5 domain response")?;
         }
         4 => {
             // IPv6: 16 bytes address + 2 bytes port
@@ -246,17 +225,12 @@ async fn socks5_handshake(
             upstream_stream
                 .read_exact(&mut addr_port)
                 .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to read SOCKS5 IPv6 address: {}",
-                        e
-                    )
-                })?;
+                .context("Failed to read SOCKS5 IPv6 address")?;
         }
         _ => {
-            return Err(
-                "Unsupported address type in SOCKS5 response".into(),
-            );
+            return Err(anyhow!(
+                "Unsupported address type in SOCKS5 response"
+            ));
         }
     }
 
@@ -268,11 +242,13 @@ async fn relay_traffic(
     mut upstream_stream: TcpStream,
     buf: &[u8],
     n: usize,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
+    // Changed this line
     // Send the HTTP request through the tunnel
-    upstream_stream.write_all(&buf[..n]).await.map_err(|e| {
-        format!("Failed to send HTTP request through tunnel: {}", e)
-    })?;
+    upstream_stream
+        .write_all(&buf[..n])
+        .await
+        .context("Failed to send HTTP request through tunnel")?;
 
     let (mut client_read, mut client_write) = client.into_split();
     let (mut upstream_read, mut upstream_write) =
@@ -285,20 +261,14 @@ async fn relay_traffic(
         tokio::io::copy(&mut upstream_read, &mut client_write);
 
     // Run both directions in parallel to completion
-    // NOTE: tokio::join! ensures both directions complete before returning.
-    // If one direction encounters an error, we still attempt to report both.
     let (r1, r2) =
         tokio::join!(client_to_upstream, upstream_to_client);
 
     // Handle client→upstream errors
-    r1.map_err(|e| {
-        format!("Client→Upstream relay failed (bytes copied: unknown): {}", e)
-    })?;
+    r1.context("Client→Upstream relay failed")?;
 
     // Handle upstream→client errors
-    r2.map_err(|e| {
-        format!("Upstream→Client relay failed (bytes copied: unknown): {}", e)
-    })?;
+    r2.context("Upstream→Client relay failed")?;
 
     Ok(())
 }
@@ -306,15 +276,16 @@ async fn relay_traffic(
 async fn handle_client(
     mut client: TcpStream,
     upstream_port: u16,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
+    // Changed this line
     configure_stream(&client)?;
 
     let mut buf = [0u8; BUFFER_SIZE];
     let (host, port, n) =
         read_and_parse_http_request(&mut client, &mut buf).await?;
 
-    let upstream_stream = connect_to_socks5(upstream_port).await?;
-    let mut upstream_stream = upstream_stream;
+    let mut upstream_stream =
+        connect_to_socks5(upstream_port).await?;
 
     socks5_handshake(&mut upstream_stream, &host, port).await?;
 
