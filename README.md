@@ -88,6 +88,8 @@ npm config delete proxy
 
 ```
 
+<hr/>
+
 ### test your IP
 
 open a terminal/cmd/powershell and run `curl http://checkip.amazonaws.com` (or `http://icanhazip.com`) - that's your IP.
@@ -96,7 +98,6 @@ assuming your SOCKS5h upstream/gateway/server/end-point is already running on 12
 run same curl command with `--proxy "socks5h://127.0.0.1:9999"`, that's the IP from the upstream.
 
 run same command with `-x http://127.0.0.1:8888` that's through the HTTP proxy. should gives the same IP as the upstream.
-
 
 <hr/>
 
@@ -110,6 +111,8 @@ run same command with `-x http://127.0.0.1:8888` that's through the HTTP proxy. 
 - network sockets optimizations - socket buffer size 2MB, and TCP_NODELAY to disable Nagle's algorithm.
 - minimal error reporting - contextual `stderr` based messages for binding, handshake, and connection failures.
 - limitations - only TCP (no UDP). only IPv4 (no IPv6). no authentication (`SOCKS5 METHOD 0` - no auth). hostname length limited to 255 bytes.
+
+<hr/>
 
 ### build
 
@@ -127,6 +130,8 @@ a free, open-source program, written in Rust, with the assist of GitHub's Copilo
 Claude Haiku 4.5, and JetBrains RustRover IDE with Community license.
 
 feel free to suggest fixes, open a bug, test.
+
+<hr/>
 
 <a href="https://paypal.me/31adkarak0" target="_blank" rel="noopener noreferrer">
   <img src="https://img.shields.io/badge/Sponsor-Donate-blue?logo=paypal&style=flat" alt="Donate via PayPal">
