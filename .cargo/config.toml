@@ -62,21 +62,6 @@ linker    = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/i686-unknown-linux
 ar        = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-ar'
 rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
 
-[target.powerpc-unknown-linux-gnu]
-linker    = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/powerpc-unknown-linux-gnu-clang'
-ar        = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-ar'
-rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpc64-unknown-linux-gnu]
-linker    = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/powerpc64-unknown-linux-gnu-clang'
-ar        = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-ar'
-rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpc64le-unknown-linux-gnu]
-linker    = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/powerpc64le-unknown-linux-gnu-clang'
-ar        = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-ar'
-rustflags = ['-C', 'link-arg=-Wl,--gc-sections']
-
 [target.x86_64-unknown-linux-gnu]
 linker    = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/x86_64-unknown-linux-gnu-clang'
 ar        = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-ar'
@@ -101,16 +86,6 @@ rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 [target.i686-unknown-linux-musl]
 linker    = '/home/elad/toolchains/i686-unknown-linux-musl/bin/i686-unknown-linux-musl-clang'
 ar        = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-ar'
-rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpc64-unknown-linux-musl]
-linker    = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/powerpc64-unknown-linux-musl-clang'
-ar        = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-ar'
-rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
-
-[target.powerpc64le-unknown-linux-musl]
-linker    = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/powerpc64le-unknown-linux-musl-clang'
-ar        = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-ar'
 rustflags = ['-C', 'link-arg=-static', '-C', 'link-arg=-Wl,--gc-sections']
 
 [target.x86_64-unknown-linux-musl]
@@ -144,12 +119,6 @@ CC_aarch64_unknown_linux_gnu      = { force = true,  value = '/home/elad/toolcha
 AR_aarch64_unknown_linux_gnu      = { force = true,  value = '/home/elad/toolchains/aarch64-unknown-linux-gnu/bin/llvm-ar'                                                       }
 CC_i686_unknown_linux_gnu         = { force = true,  value = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/i686-unknown-linux-gnu-clang'                                     }
 AR_i686_unknown_linux_gnu         = { force = true,  value = '/home/elad/toolchains/i686-unknown-linux-gnu/bin/llvm-ar'                                                          }
-CC_powerpc_unknown_linux_gnu      = { force = true,  value = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/powerpc-unknown-linux-gnu-clang'                               }
-AR_powerpc_unknown_linux_gnu      = { force = true,  value = '/home/elad/toolchains/powerpc-unknown-linux-gnu/bin/llvm-ar'                                                       }
-CC_powerpc64_unknown_linux_gnu    = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/powerpc64-unknown-linux-gnu-clang'                           }
-AR_powerpc64_unknown_linux_gnu    = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-gnu/bin/llvm-ar'                                                     }
-CC_powerpc64le_unknown_linux_gnu  = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/powerpc64le-unknown-linux-gnu-clang'                       }
-AR_powerpc64le_unknown_linux_gnu  = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-gnu/bin/llvm-ar'                                                   }
 CC_x86_64_unknown_linux_gnu       = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/x86_64-unknown-linux-gnu-clang'                                 }
 AR_x86_64_unknown_linux_gnu       = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-gnu/bin/llvm-ar'                                                        }
 CC_armv7_unknown_linux_gnueabi    = { force = true,  value = '/home/elad/toolchains/armv7-unknown-linux-gnueabi/bin/armv7-unknown-linux-gnueabi-clang'                           }
@@ -161,10 +130,6 @@ CC_aarch64_unknown_linux_musl     = { force = true,  value = '/home/elad/toolcha
 AR_aarch64_unknown_linux_musl     = { force = true,  value = '/home/elad/toolchains/aarch64-unknown-linux-musl/bin/llvm-ar'                                                      }
 CC_i686_unknown_linux_musl        = { force = true,  value = '/home/elad/toolchains/i686-unknown-linux-musl/bin/i686-unknown-linux-musl-clang'                                   }
 AR_i686_unknown_linux_musl        = { force = true,  value = '/home/elad/toolchains/i686-unknown-linux-musl/bin/llvm-ar'                                                         }
-CC_powerpc64_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/powerpc64-unknown-linux-musl-clang'                         }
-AR_powerpc64_unknown_linux_musl   = { force = true,  value = '/home/elad/toolchains/powerpc64-unknown-linux-musl/bin/llvm-ar'                                                    }
-CC_powerpc64le_unknown_linux_musl = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/powerpc64le-unknown-linux-musl-clang'                     }
-AR_powerpc64le_unknown_linux_musl = { force = true,  value = '/home/elad/toolchains/powerpc64le-unknown-linux-musl/bin/llvm-ar'                                                  }
 CC_x86_64_unknown_linux_musl      = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/x86_64-unknown-linux-musl-clang'                               }
 AR_x86_64_unknown_linux_musl      = { force = true,  value = '/home/elad/toolchains/x86_64-unknown-linux-musl/bin/llvm-ar'                                                       }
 CC_armv7_unknown_linux_musleabi   = { force = true,  value = '/home/elad/toolchains/armv7-unknown-linux-musleabi/bin/armv7-unknown-linux-musleabi-clang'                         }

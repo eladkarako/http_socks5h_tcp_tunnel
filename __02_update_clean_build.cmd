@@ -5,7 +5,7 @@
 :: updates local rust components in Windows and WSL.
 :: clean and test on Windows for native Windows (x86_64), and WSL for native Linux (x86_64).
 :: **** if a test fails the result of cargo test effects the shell's exit code, which will quit before building
-:: it builds on Windows for Windows, and on WSL for Android NDK, Linux, embedded and powerpc. (Android recently moved toolchain from Windows to WSL, keeping just windows-msvc on Windows).
+:: it builds on Windows for Windows, and on WSL for Android NDK, Linux. (Android recently moved toolchain from Windows to WSL, keeping just windows-msvc on Windows).
 ::------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -88,21 +88,16 @@ set "ARGS=%ARGS% cargo build  --release  --target   i686-linux-android ;"
 set "ARGS=%ARGS% cargo build  --release  --target   x86_64-linux-android ;"
 set "ARGS=%ARGS% cargo build  --release  --target   armv7-linux-androideabi ;"
 ::------------------ Linux (gnu)
-set "ARGS=%ARGS% rustup target add  aarch64-unknown-linux-gnu  i686-unknown-linux-gnu  powerpc-unknown-linux-gnu  powerpc64-unknown-linux-gnu  powerpc64le-unknown-linux-gnu  x86_64-unknown-linux-gnu  armv7-unknown-linux-gnueabi  armv7-unknown-linux-gnueabihf ;"
+set "ARGS=%ARGS% rustup target add  aarch64-unknown-linux-gnu  i686-unknown-linux-gnu  x86_64-unknown-linux-gnu  armv7-unknown-linux-gnueabi  armv7-unknown-linux-gnueabihf ;"
 set "ARGS=%ARGS% cargo build  --release  --target   aarch64-unknown-linux-gnu ;"
 set "ARGS=%ARGS% cargo build  --release  --target   i686-unknown-linux-gnu ;"
-set "ARGS=%ARGS% cargo build  --release  --target   powerpc-unknown-linux-gnu ;"
-set "ARGS=%ARGS% cargo build  --release  --target   powerpc64-unknown-linux-gnu ;"
-set "ARGS=%ARGS% cargo build  --release  --target   powerpc64le-unknown-linux-gnu ;"
 set "ARGS=%ARGS% cargo build  --release  --target   x86_64-unknown-linux-gnu ;"
 set "ARGS=%ARGS% cargo build  --release  --target   armv7-unknown-linux-gnueabi ;"
 set "ARGS=%ARGS% cargo build  --release  --target   armv7-unknown-linux-gnueabihf ;"
 ::------------------ Linux (musl)
-set "ARGS=%ARGS% rustup target add  aarch64-unknown-linux-musl  i686-unknown-linux-musl  powerpc64-unknown-linux-musl  powerpc64le-unknown-linux-musl  x86_64-unknown-linux-musl  armv7-unknown-linux-musleabi  armv7-unknown-linux-musleabihf ;"
+set "ARGS=%ARGS% rustup target add  aarch64-unknown-linux-musl  i686-unknown-linux-musl  x86_64-unknown-linux-musl  armv7-unknown-linux-musleabi  armv7-unknown-linux-musleabihf ;"
 set "ARGS=%ARGS% cargo build  --release  --target   aarch64-unknown-linux-musl ;"
 set "ARGS=%ARGS% cargo build  --release  --target   i686-unknown-linux-musl ;"
-set "ARGS=%ARGS% cargo build  --release  --target   powerpc64-unknown-linux-musl ;"
-set "ARGS=%ARGS% cargo build  --release  --target   powerpc64le-unknown-linux-musl ;"
 set "ARGS=%ARGS% cargo build  --release  --target   x86_64-unknown-linux-musl ;"
 set "ARGS=%ARGS% cargo build  --release  --target   armv7-unknown-linux-musleabi ;"
 set "ARGS=%ARGS% cargo build  --release  --target   armv7-unknown-linux-musleabihf ;"
