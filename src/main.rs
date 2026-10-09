@@ -68,17 +68,25 @@ fn configure_stream(stream: &TcpStream) -> Result<()> {
 }
 
 #[inline]
-fn parse_url(url: &str) -> Option<(&str, u16)> {
+fn parse_url(url: &str) -> Result<(&str, u16)> {
     let url = url
         .strip_prefix("http://")
         .or_else(|| url.strip_prefix("https://"))
         .unwrap_or(url);
 
-    let host_port = url.split('/').next()?.trim();
+    let host_port = url
+        .split('/')
+        .next()
+        .ok_or_else(|| anyhow!("No host:port found in URL"))?
+        .trim();
 
     match host_port.split_once(':') {
-        Some((h, p)) => Some((h, p.parse::<u16>().ok()?)),
-        None => Some((host_port, 80)),
+        Some((h, p)) => {
+            let port =
+                p.parse::<u16>().context("Invalid port number")?;
+            Ok((h, port))
+        }
+        None => Ok((host_port, 80)),
     }
 }
 
@@ -108,8 +116,8 @@ async fn read_and_parse_http_request(
     );
 
     let url = request_line[1];
-    let (host, port) = parse_url(url).ok_or_else(|| {
-        anyhow!("Invalid URL in request: '{}'", url)
+    let (host, port) = parse_url(url).with_context(|| {
+        format!("Invalid URL in request: '{}'", url)
     })?;
 
     ensure!(!host.is_empty(), "Empty hostname extracted from URL");
