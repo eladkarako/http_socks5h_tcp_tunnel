@@ -49,18 +49,12 @@ armv7-linux-androideabi
 
 aarch64-unknown-linux-gnu
 i686-unknown-linux-gnu
-powerpc-unknown-linux-gnu
-powerpc64-unknown-linux-gnu
-powerpc64le-unknown-linux-gnu
 x86_64-unknown-linux-gnu
 armv7-unknown-linux-gnueabi
 armv7-unknown-linux-gnueabihf
 
 aarch64-unknown-linux-musl
 i686-unknown-linux-musl
-powerpc-unknown-linux-musl
-powerpc64-unknown-linux-musl
-powerpc64le-unknown-linux-musl
 x86_64-unknown-linux-musl
 armv7-unknown-linux-musleabi
 armv7-unknown-linux-musleabihf
